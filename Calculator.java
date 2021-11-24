@@ -20,16 +20,14 @@ public class Calculator extends Application {
     // Default text for the current operand.
     static final String DEFAULT_OPERAND_CURRENT = "";
     // Default operation value.
-    static final String DEFUALT_OPERATION = "";
+    static final String DEFAULT_OPERATION = "";
 
-    // The text displayed at the top.
-//    static String displayText = DEFAULT_DISPLAY_TEXT;
     // The stored operand to be operated on.
     static String operandStored = DEFAULT_OPERAND_STORED;
     // The current operand being entered by the user.
     static String operandCurrent = DEFAULT_OPERAND_CURRENT;
     // The current operation selected.
-    static String operation = DEFUALT_OPERATION;
+    static String operation = DEFAULT_OPERATION;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -53,6 +51,7 @@ public class Calculator extends Application {
                 appendText(nameButton);
                 display.setText(getDisplayText());
             });
+            buttonDigit.setFocusTraversable(false);
             buttonDigit.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
             buttons[i] = buttonDigit;
             if (i == 0) {
@@ -72,6 +71,7 @@ public class Calculator extends Application {
                 display.setText(getDisplayText());
             }
         });
+        buttonDecimal.setFocusTraversable(false);
         GridPane.setConstraints(buttonDecimal, 2, 4);
         root.getChildren().add(buttonDecimal);
 
@@ -79,6 +79,7 @@ public class Calculator extends Application {
 
         // Create scene.
         Scene scene = new Scene(root);
+
         // Define key typed and key pressed event handlers.
         scene.setOnKeyTyped(event -> {
             String text = event.getCharacter();
@@ -87,19 +88,23 @@ public class Calculator extends Application {
                 case "-":
                 case "*":
                 case "/":
-                    // Store the entered operand.
-                    if (operandStored.isEmpty()) {
-                        operandStored = new String(operandCurrent);
-                    // Calculate the stored operand using the specified operation if it already exists.
-                    } else {
-                        operandStored = calculate();
+                    if (!operandCurrent.isEmpty()) {
+                        // Store the entered operand.
+                        if (operandStored.isEmpty()) {
+                            operandStored = new String(operandCurrent);
+                        // Calculate the stored operand using the specified operation.
+                        } else {
+                            operandStored = calculate();
+                        }
                     }
                     operandCurrent = DEFAULT_OPERAND_CURRENT;
                     operation = text;
-                    System.out.println(event.getText());
-                    System.out.println(text);
                     break;
                 default:
+                    // Clear if an operation was completed and this is not an intermediate operation.
+                    if (!operandStored.isEmpty() && operation.isEmpty()) {
+                        clear();
+                    }
                     if (Character.isLetterOrDigit(text.charAt(0)) || text.equals('.')) {
                         appendText(text);
                     }
@@ -110,9 +115,13 @@ public class Calculator extends Application {
         scene.setOnKeyReleased(event -> {
             switch (event.getCode()) {
                 case ENTER:
+                    operandStored = calculate();
+                    operandCurrent = DEFAULT_OPERAND_CURRENT;
+                    operation = DEFAULT_OPERATION;
                     break;
                 case ESCAPE:
                     clear();
+                    break;
                 case BACK_SPACE:
                     removeCharacter();
                     break;
@@ -164,7 +173,7 @@ public class Calculator extends Application {
         }
     }
 
-    // Apply the stored operation on the stored and current operands and return the result as text.
+    // Solve the stored operation with the stored and current operands and return the result as text.
     private String calculate() {
         double operand1 = stringToDouble(operandStored);
         double operand2 = stringToDouble(operandCurrent);
@@ -190,7 +199,7 @@ public class Calculator extends Application {
     private void clear() {
         operandStored = DEFAULT_OPERAND_STORED;
         operandCurrent = DEFAULT_OPERAND_CURRENT;
-        operation = DEFUALT_OPERATION;
+        operation = DEFAULT_OPERATION;
     }
 
     // Convert a string to a double.
