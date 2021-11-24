@@ -15,15 +15,19 @@ import java.io.IOException;
 public class Calculator extends Application {
     // Default text displayed at the top.
     static final String DEFAULT_DISPLAY_TEXT = "0";
-    // Default operand value.
-    static final double DEFAULT_OPERAND = 0.0;
+    // Default text for the stored operand.
+    static final String DEFAULT_OPERAND_STORED = "";
+    // Default text for the current operand.
+    static final String DEFAULT_OPERAND_CURRENT = "";
     // Default operation value.
     static final String DEFUALT_OPERATION = "";
 
     // The text displayed at the top.
-    static String displayText = DEFAULT_DISPLAY_TEXT;
-    // The operand on the left side of the entered operator.
-    static double operand = Double.parseDouble(displayText);
+//    static String displayText = DEFAULT_DISPLAY_TEXT;
+    // The stored operand to be operated on.
+    static String operandStored = DEFAULT_OPERAND_STORED;
+    // The current operand being entered by the user.
+    static String operandCurrent = DEFAULT_OPERAND_CURRENT;
     // The current operation selected.
     static String operation = DEFUALT_OPERATION;
 
@@ -35,7 +39,7 @@ public class Calculator extends Application {
         root.setHgap(5);
 
         // Create text display.
-        Label display = new Label(displayText);
+        Label display = new Label(DEFAULT_DISPLAY_TEXT);
         display.setAlignment(Pos.BASELINE_RIGHT);
         GridPane.setConstraints(display, 0, 0, 4, 1);
         root.getChildren().add(display);
@@ -46,13 +50,10 @@ public class Calculator extends Application {
             String nameButton = String.valueOf(i);
             Button buttonDigit = new Button(nameButton);
             buttonDigit.setOnAction(event -> {
-                if (displayText.equals("0")) {
-                    displayText = nameButton;
-                } else {
-                    displayText += nameButton;
-                }
-                display.setText(displayText);
+                appendText(nameButton);
+                display.setText(getDisplayText());
             });
+            buttonDigit.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
             buttons[i] = buttonDigit;
             if (i == 0) {
                 GridPane.setConstraints(buttonDigit, 0, 4, 2, 1);
@@ -66,9 +67,9 @@ public class Calculator extends Application {
         String nameButtonDecimal = ".";
         Button buttonDecimal = new Button(nameButtonDecimal);
         buttonDecimal.setOnAction(event -> {
-            if (!displayText.contains(nameButtonDecimal)) {
-                displayText += nameButtonDecimal;
-                display.setText(displayText);
+            if (!operandCurrent.contains(nameButtonDecimal)) {
+                appendText(nameButtonDecimal);
+                display.setText(getDisplayText());
             }
         });
         GridPane.setConstraints(buttonDecimal, 2, 4);
@@ -80,22 +81,31 @@ public class Calculator extends Application {
         Scene scene = new Scene(root);
         // Define key typed and key pressed event handlers.
         scene.setOnKeyTyped(event -> {
-            char character = event.getCharacter().charAt(0);
-            switch (character) {
-                case '+':
-                case '-':
-                case '*':
-                case '/':
-                    operand = stringToDouble(displayText);
-                    operation = event.getText();
+            String text = event.getCharacter();
+            switch (text) {
+                case "+":
+                case "-":
+                case "*":
+                case "/":
+                    // Store the entered operand.
+                    if (operandStored.isEmpty()) {
+                        operandStored = new String(operandCurrent);
+                    // Calculate the stored operand using the specified operation if it already exists.
+                    } else {
+                        operandStored = calculate();
+                    }
+                    operandCurrent = DEFAULT_OPERAND_CURRENT;
+                    operation = text;
+                    System.out.println(event.getText());
+                    System.out.println(text);
                     break;
                 default:
-                    if (Character.isLetterOrDigit(character)) {
-                        appendCharacter(character);
+                    if (Character.isLetterOrDigit(text.charAt(0)) || text.equals('.')) {
+                        appendText(text);
                     }
                     break;
             }
-            display.setText(displayText);
+            display.setText(getDisplayText());
         });
         scene.setOnKeyReleased(event -> {
             switch (event.getCode()) {
@@ -107,7 +117,7 @@ public class Calculator extends Application {
                     removeCharacter();
                     break;
             }
-            display.setText(displayText);
+            display.setText(getDisplayText());
         });
 
         // Create window.
@@ -120,32 +130,66 @@ public class Calculator extends Application {
         launch();
     }
 
-    // Add a character to the display.
-    private void appendCharacter(char character) {
-        String text = Character.toString(character);
-        if (displayText.equals("0")) {
-            displayText = text;
+    // Get the string to be displayed based on the current operand.
+    private String getDisplayText() {
+        String text;
+        if (!operandCurrent.isEmpty()) {
+            text = operandCurrent;
         } else {
-            displayText += text;
+            if (operandStored.isEmpty()) {
+                text = DEFAULT_DISPLAY_TEXT;
+            } else {
+                text = operandStored;
+            }
         }
+        return text;
+    }
+
+    // Add text to the display.
+    private void appendText(String text) {
+        operandCurrent += text;
     }
 
     // Remove the last character from the display.
     private void removeCharacter() {
-        if (!displayText.equals(DEFAULT_DISPLAY_TEXT)) {
-            int length = displayText.length();
-            if (length > 1) {
-                displayText = displayText.substring(0, length-1);
-            } else {
-                displayText = DEFAULT_DISPLAY_TEXT;
-            }
+        switch (operandCurrent.length()) {
+            case 0:
+                break;
+            case 1:
+                operandCurrent = DEFAULT_OPERAND_CURRENT;
+                break;
+            default:
+                operandCurrent = operandCurrent.substring(0, operandCurrent.length()-1);
+                break;
         }
+    }
+
+    // Apply the stored operation on the stored and current operands and return the result as text.
+    private String calculate() {
+        double operand1 = stringToDouble(operandStored);
+        double operand2 = stringToDouble(operandCurrent);
+        double result = 0.0;
+        switch (operation) {
+            case "+":
+                result = operand1 + operand2;
+                break;
+            case "-":
+                result = operand1 - operand2;
+                break;
+            case "*":
+                result = operand1 * operand2;
+                break;
+            case "/":
+                result = operand1 / operand2;
+                break;
+        }
+        return String.valueOf(result);
     }
 
     // Reset the display and any stored operands.
     private void clear() {
-        displayText = DEFAULT_DISPLAY_TEXT;
-        operand = DEFAULT_OPERAND;
+        operandStored = DEFAULT_OPERAND_STORED;
+        operandCurrent = DEFAULT_OPERAND_CURRENT;
         operation = DEFUALT_OPERATION;
     }
 
