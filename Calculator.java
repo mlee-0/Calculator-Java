@@ -7,7 +7,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -26,7 +29,7 @@ public class Calculator extends Application {
     static String operandStored = DEFAULT_OPERAND_STORED;
     // The current operand being entered by the user.
     static String operandCurrent = DEFAULT_OPERAND_CURRENT;
-    // The current operation selected.
+    // The selected operation.
     static String operation = DEFAULT_OPERATION;
 
     @Override
@@ -35,10 +38,23 @@ public class Calculator extends Application {
         GridPane root = new GridPane();
         root.setVgap(5);
         root.setHgap(5);
+        for (int i = 0; i < 6; i++) {
+            RowConstraints row = new RowConstraints();
+            row.setVgrow(Priority.ALWAYS);
+            root.getRowConstraints().add(row);
+        }
+        for (int i = 0; i < 4; i++) {
+            ColumnConstraints column = new ColumnConstraints();
+            column.setHgrow(Priority.ALWAYS);
+            root.getColumnConstraints().add(column);
+        }
+        root.setPrefWidth(400);
+        root.setPrefHeight(500);
 
         // Create text display.
         Label display = new Label(DEFAULT_DISPLAY_TEXT);
         display.setAlignment(Pos.BASELINE_RIGHT);
+        display.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         GridPane.setConstraints(display, 0, 0, 4, 1);
         root.getChildren().add(display);
 
@@ -51,8 +67,8 @@ public class Calculator extends Application {
                 appendText(nameButton);
                 display.setText(getDisplayText());
             });
-            buttonDigit.setFocusTraversable(false);
             buttonDigit.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            buttonDigit.setFocusTraversable(false);
             buttons[i] = buttonDigit;
             if (i == 0) {
                 GridPane.setConstraints(buttonDigit, 0, 4, 2, 1);
@@ -71,6 +87,7 @@ public class Calculator extends Application {
                 display.setText(getDisplayText());
             }
         });
+        buttonDecimal.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         buttonDecimal.setFocusTraversable(false);
         GridPane.setConstraints(buttonDecimal, 2, 4);
         root.getChildren().add(buttonDecimal);
