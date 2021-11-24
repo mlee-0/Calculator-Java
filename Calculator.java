@@ -13,12 +13,19 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 public class Calculator extends Application {
-    // The default text displayed at the top.
+    // Default text displayed at the top.
     static final String DEFAULT_DISPLAY_TEXT = "0";
+    // Default operand value.
+    static final double DEFAULT_OPERAND = 0.0;
+    // Default operation value.
+    static final String DEFUALT_OPERATION = "";
+
     // The text displayed at the top.
     static String displayText = DEFAULT_DISPLAY_TEXT;
     // The operand on the left side of the entered operator.
     static double operand = Double.parseDouble(displayText);
+    // The current operation selected.
+    static String operation = DEFUALT_OPERATION;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -27,7 +34,7 @@ public class Calculator extends Application {
         root.setVgap(5);
         root.setHgap(5);
 
-        // Create number display.
+        // Create text display.
         Label display = new Label(displayText);
         display.setAlignment(Pos.BASELINE_RIGHT);
         GridPane.setConstraints(display, 0, 0, 4, 1);
@@ -54,6 +61,7 @@ public class Calculator extends Application {
             }
             root.getChildren().add(buttonDigit);
         }
+
         // Create decimal point button.
         String nameButtonDecimal = ".";
         Button buttonDecimal = new Button(nameButtonDecimal);
@@ -75,18 +83,15 @@ public class Calculator extends Application {
             char character = event.getCharacter().charAt(0);
             switch (character) {
                 case '+':
-                    break;
                 case '-':
-                    break;
                 case '*':
-                    break;
                 case '/':
-                    break;
-                case ' ':
+                    operand = stringToDouble(displayText);
+                    operation = event.getText();
                     break;
                 default:
                     if (Character.isLetterOrDigit(character)) {
-                        appendCharacterToDisplay(character);
+                        appendCharacter(character);
                     }
                     break;
             }
@@ -96,8 +101,10 @@ public class Calculator extends Application {
             switch (event.getCode()) {
                 case ENTER:
                     break;
+                case ESCAPE:
+                    clear();
                 case BACK_SPACE:
-                    removeCharacterFromDisplay();
+                    removeCharacter();
                     break;
             }
             display.setText(displayText);
@@ -114,7 +121,7 @@ public class Calculator extends Application {
     }
 
     // Add a character to the display.
-    private void appendCharacterToDisplay(char character) {
+    private void appendCharacter(char character) {
         String text = Character.toString(character);
         if (displayText.equals("0")) {
             displayText = text;
@@ -124,7 +131,7 @@ public class Calculator extends Application {
     }
 
     // Remove the last character from the display.
-    private void removeCharacterFromDisplay() {
+    private void removeCharacter() {
         if (!displayText.equals(DEFAULT_DISPLAY_TEXT)) {
             int length = displayText.length();
             if (length > 1) {
@@ -133,5 +140,21 @@ public class Calculator extends Application {
                 displayText = DEFAULT_DISPLAY_TEXT;
             }
         }
+    }
+
+    // Reset the display and any stored operands.
+    private void clear() {
+        displayText = DEFAULT_DISPLAY_TEXT;
+        operand = DEFAULT_OPERAND;
+        operation = DEFUALT_OPERATION;
+    }
+
+    // Convert a string to a double.
+    private static double stringToDouble(String text) {
+        double number = Double.parseDouble(text);
+        return number;
+//        catch (Exception e) {
+//            System.out.println(e);
+//        }
     }
 }
