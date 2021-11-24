@@ -6,13 +6,19 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 
 public class Calculator extends Application {
-    String displayText = "0";
+    // The default text displayed at the top.
+    static final String DEFAULT_DISPLAY_TEXT = "0";
+    // The text displayed at the top.
+    static String displayText = DEFAULT_DISPLAY_TEXT;
+    // The operand on the left side of the entered operator.
+    static double operand = Double.parseDouble(displayText);
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -61,8 +67,43 @@ public class Calculator extends Application {
         root.getChildren().add(buttonDecimal);
 
         // Create operator buttons.
-        
+
+        // Create scene.
         Scene scene = new Scene(root);
+        // Define key typed and key pressed event handlers.
+        scene.setOnKeyTyped(event -> {
+            char character = event.getCharacter().charAt(0);
+            switch (character) {
+                case '+':
+                    break;
+                case '-':
+                    break;
+                case '*':
+                    break;
+                case '/':
+                    break;
+                case ' ':
+                    break;
+                default:
+                    if (Character.isLetterOrDigit(character)) {
+                        appendCharacterToDisplay(character);
+                    }
+                    break;
+            }
+            display.setText(displayText);
+        });
+        scene.setOnKeyReleased(event -> {
+            switch (event.getCode()) {
+                case ENTER:
+                    break;
+                case BACK_SPACE:
+                    removeCharacterFromDisplay();
+                    break;
+            }
+            display.setText(displayText);
+        });
+
+        // Create window.
         stage.setScene(scene);
         stage.setTitle("Calculator");
         stage.show();
@@ -72,7 +113,25 @@ public class Calculator extends Application {
         launch();
     }
 
-//    private static void updateDisplay() {
-//        display.setText(displayText);
-//    }
+    // Add a character to the display.
+    private void appendCharacterToDisplay(char character) {
+        String text = Character.toString(character);
+        if (displayText.equals("0")) {
+            displayText = text;
+        } else {
+            displayText += text;
+        }
+    }
+
+    // Remove the last character from the display.
+    private void removeCharacterFromDisplay() {
+        if (!displayText.equals(DEFAULT_DISPLAY_TEXT)) {
+            int length = displayText.length();
+            if (length > 1) {
+                displayText = displayText.substring(0, length-1);
+            } else {
+                displayText = DEFAULT_DISPLAY_TEXT;
+            }
+        }
+    }
 }
