@@ -2,6 +2,7 @@ import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -34,6 +35,10 @@ public class Calculator extends Application {
     // The selected operation.
     static String operation = DEFAULT_OPERATION;
 
+    // Layout properties.
+    static final int NUMBER_ROWS = 6;
+    static final int NUMBER_COLUMNS = 4;
+
     static final String MINUS_SIGN = "-";
 
     @Override
@@ -42,19 +47,20 @@ public class Calculator extends Application {
         GridPane root = new GridPane();
         root.setVgap(5);
         root.setHgap(5);
+        root.setPadding(new Insets(10, 10, 10, 10));
         for (int i = 0; i < 6; i++) {
             RowConstraints row = new RowConstraints();
-            row.setVgrow(Priority.ALWAYS);
+            row.setPercentHeight(100 / NUMBER_ROWS);
             root.getRowConstraints().add(row);
         }
         for (int i = 0; i < 4; i++) {
             ColumnConstraints column = new ColumnConstraints();
-            column.setHgrow(Priority.ALWAYS);
+            column.setPercentWidth(100 / NUMBER_COLUMNS);
             root.getColumnConstraints().add(column);
         }
         root.setPrefWidth(400);
         root.setPrefHeight(500);
-        root.setStyle("-fx-font-size: 20pt");
+        root.setStyle("-fx-font-size: 25pt");
 
         // Create text display.
         Label display = new Label(DEFAULT_DISPLAY_TEXT);
