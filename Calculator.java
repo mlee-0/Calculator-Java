@@ -193,26 +193,7 @@ public class Calculator extends Application {
         launch();
     }
 
-    // Get the string showing the current operand to be displayed.
-    private String getDisplayText() {
-        String text;
-        if (!this.operandCurrent.isEmpty()) {
-            text = this.operandCurrent;
-        } else {
-            if (this.operandStored.isEmpty()) {
-                text = this.DEFAULT_DISPLAY_TEXT;
-            } else {
-                text = this.operandStored;
-            }
-        }
-        // Add a "0" at the beginning if the first character is a decimal point.
-        if (text.charAt(0) == '.') {
-            text = this.DEFAULT_DISPLAY_TEXT + text;
-        }
-        return text;
-    }
-
-    // Enter the specified number into the current operand.
+    // Enter the specified character into the current operand.
     private void enter(String text) {
         // Only add the character if it is alphanumeric or is a decimal point.
         if (Character.isLetterOrDigit(text.charAt(0)) || (text.equals(".") && !this.operandCurrent.contains("."))) {
@@ -227,7 +208,7 @@ public class Calculator extends Application {
         }
     }
 
-    // Remove the last character from the display.
+    // Remove the last character from the current operand.
     private void backspace() {
         switch (this.operandCurrent.length()) {
             case 0:
@@ -252,26 +233,44 @@ public class Calculator extends Application {
         }
     }
 
-    // Apply the specified operation.
-    private void operate(String operation) {
+    // Get the string showing the current operand to be displayed.
+    private String getDisplayText() {
+        String text;
         if (!this.operandCurrent.isEmpty()) {
+            text = this.operandCurrent;
+        } else {
             if (this.operandStored.isEmpty()) {
-                // Store the entered operand.
-                this.operandStored = new String(this.operandCurrent);
+                text = this.DEFAULT_DISPLAY_TEXT;
             } else {
-                // Calculate the stored operand using the specified operation.
-                this.operandStored = calculate();
+                text = this.operandStored;
             }
         }
-        this.operandCurrent = this.DEFAULT_OPERAND_CURRENT;
-        this.operation = operation;
+        // Add a "0" at the beginning if the first character is a decimal point.
+        if (text.charAt(0) == '.') {
+            text = this.DEFAULT_DISPLAY_TEXT + text;
+        }
+        return text;
     }
 
     // Solve the stored operation and operands and return the result as text.
     private String calculate() {
-        double operand1 = stringToDouble(this.operandStored.isEmpty() ? DEFAULT_DISPLAY_TEXT : this.operandStored);
-        double operand2 = stringToDouble(this.operandCurrent.isEmpty() ? DEFAULT_DISPLAY_TEXT : this.operandCurrent);
+        double operand1;
+        double operand2;
         double result;
+        // Convert the operands to doubles.
+        try {
+            operand1 = Double.parseDouble(this.operandStored);
+        }
+        catch (NumberFormatException e) {
+            operand1 = Double.parseDouble(DEFAULT_DISPLAY_TEXT);
+        }
+        try {
+            operand2 = Double.parseDouble(this.operandCurrent);
+        }
+        catch (NumberFormatException e) {
+            operand2 = Double.parseDouble(DEFAULT_DISPLAY_TEXT);
+        }
+        // Perform the stored operation on the operands.
         switch (this.operation) {
             case "+":
                 result = operand1 + operand2;
@@ -286,11 +285,26 @@ public class Calculator extends Application {
                 result = operand1 / operand2;
                 break;
             default:
-                result = 0.0;
+                result = Double.parseDouble(DEFAULT_DISPLAY_TEXT);
         }
         // Remove decimal point and successive digits if number is an integer.
         String text = (result % 1) == 0 ? String.valueOf((int)result): String.valueOf(result);
         return text;
+    }
+
+    // Apply the specified operation.
+    private void operate(String operation) {
+        if (!this.operandCurrent.isEmpty()) {
+            if (this.operandStored.isEmpty()) {
+                // Store the entered operand.
+                this.operandStored = new String(this.operandCurrent);
+            } else {
+                // Calculate the stored operand using the specified operation.
+                this.operandStored = calculate();
+            }
+        }
+        this.operandCurrent = this.DEFAULT_OPERAND_CURRENT;
+        this.operation = operation;
     }
 
     // Solve the stored operation and operands and clear the stored operation.
@@ -307,14 +321,5 @@ public class Calculator extends Application {
         this.operandStored = this.DEFAULT_OPERAND_STORED;
         this.operandCurrent = this.DEFAULT_OPERAND_CURRENT;
         this.operation = this.DEFAULT_OPERATION;
-    }
-
-    // Convert a string to a double.
-    private static double stringToDouble(String text) {
-        double number = Double.parseDouble(text);
-        return number;
-//        catch (Exception e) {
-//            System.out.println(e);
-//        }
     }
 }
