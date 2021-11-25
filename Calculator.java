@@ -56,6 +56,9 @@ public class Calculator extends Application {
     static final String RANDOM_SYMBOL = "?";
     static final String SOLVE_SYMBOL = "=";
     static final String CLEAR_SYMBOL = "C";
+    // Error messages.
+    static final String OVERFLOW_MESSAGE = "Overflow";
+    static final String UNDERFLOW_MESSAGE = "Underflow";
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -339,7 +342,16 @@ public class Calculator extends Application {
                 break;
         }
         // Remove decimal point and successive digits if number is an integer.
-        String text = (result % 1) == 0 ? String.valueOf((int)result): String.valueOf(result);
+        String text;
+        if ((long)result == Long.MAX_VALUE) {
+            text = OVERFLOW_MESSAGE;
+        }
+        else if ((long)result == Long.MIN_VALUE) {
+            text = UNDERFLOW_MESSAGE;
+        }
+        else {
+            text = (result % 1) == 0 ? String.valueOf((long)result): String.valueOf(result);
+        }
         return text;
     }
 
