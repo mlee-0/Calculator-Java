@@ -1,3 +1,6 @@
+import java.io.IOException;
+import java.util.LinkedHashMap;
+
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -15,8 +18,6 @@ import javafx.scene.layout.Priority;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
-
-import java.io.IOException;
 
 public class Calculator extends Application {
     // Default text displayed at the top.
@@ -39,7 +40,19 @@ public class Calculator extends Application {
     static final int NUMBER_ROWS = 6;
     static final int NUMBER_COLUMNS = 4;
 
-    static final String MINUS_SIGN = "-";
+    // Operator symbols.
+    static final String PLUS_SYMBOL = "+";
+    static final String PLUS_SYMBOL_DISPLAY = Character.toString('\u002b');
+    static final String MINUS_SYMBOL = "-";
+    static final String MINUS_SYMBOL_DISPLAY = Character.toString('\u2212');
+    static final String MULTIPLY_SYMBOL = "*";
+    static final String MULTIPLY_SYMBOL_DISPLAY = Character.toString('\u00d7');
+    static final String DIVIDE_SYMBOL = "/";
+    static final String DIVIDE_SYMBOL_DISPLAY = Character.toString('\u00f7');
+    static final String DECIMAL_SYMBOL = ".";
+    static final String INVERT_SYMBOL = Character.toString('\u00b1');
+    static final String SOLVE_SYMBOL = "=";
+    static final String CLEAR_SYMBOL = "C";
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -48,12 +61,12 @@ public class Calculator extends Application {
         root.setVgap(5);
         root.setHgap(5);
         root.setPadding(new Insets(10, 10, 10, 10));
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < NUMBER_ROWS; i++) {
             RowConstraints row = new RowConstraints();
             row.setPercentHeight(100 / NUMBER_ROWS);
             root.getRowConstraints().add(row);
         }
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < NUMBER_COLUMNS; i++) {
             ColumnConstraints column = new ColumnConstraints();
             column.setPercentWidth(100 / NUMBER_COLUMNS);
             root.getColumnConstraints().add(column);
@@ -64,10 +77,10 @@ public class Calculator extends Application {
 
         // Create text display.
         Label display = new Label(DEFAULT_DISPLAY_TEXT);
-        display.setFont(Font.font("System", FontWeight.NORMAL, 50));
+        display.setFont(Font.font("", FontWeight.NORMAL, 50));
         display.setAlignment(Pos.BASELINE_RIGHT);
         display.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-        GridPane.setConstraints(display, 0, 0, 4, 1);
+        GridPane.setConstraints(display, 0, 0, NUMBER_COLUMNS, 1);
         root.getChildren().add(display);
 
         // Create digit buttons.
@@ -83,63 +96,68 @@ public class Calculator extends Application {
             button.setFocusTraversable(false);
             buttons[i] = button;
             if (i == 0) {
-                GridPane.setConstraints(button, 1, 5);
+                GridPane.setConstraints(button, 1, NUMBER_ROWS-1);
             } else {
-                GridPane.setConstraints(button, (i-1)%3, 4 - (i-1)/3);
+                GridPane.setConstraints(button, (i-1)%3, (NUMBER_ROWS-2) - (i-1)/3);
             }
             root.getChildren().add(button);
         }
 
         // Create decimal point button.
-        Button buttonDecimal = new Button(".");
+        Button buttonDecimal = new Button(DECIMAL_SYMBOL);
         buttonDecimal.setOnAction(event -> {
             enter(buttonDecimal.getText());
             display.setText(getDisplayText());
         });
         buttonDecimal.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         buttonDecimal.setFocusTraversable(false);
-        GridPane.setConstraints(buttonDecimal, 2, 5);
+        GridPane.setConstraints(buttonDecimal, 2, NUMBER_ROWS-1);
         root.getChildren().add(buttonDecimal);
 
         // Create invert sign button.
-        Button buttonInvert = new Button("+/-");
+        Button buttonInvert = new Button(INVERT_SYMBOL);
         buttonInvert.setOnAction(event -> {
             invert();
             display.setText(getDisplayText());
         });
         buttonInvert.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         buttonInvert.setFocusTraversable(false);
-        GridPane.setConstraints(buttonInvert, 0, 5);
+        GridPane.setConstraints(buttonInvert, 0, NUMBER_ROWS-1);
         root.getChildren().add(buttonInvert);
 
         // Create solve button.
-        Button buttonSolve = new Button("=");
+        Button buttonSolve = new Button(SOLVE_SYMBOL);
         buttonSolve.setOnAction(event -> {
             solve();
             display.setText(getDisplayText());
         });
         buttonSolve.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         buttonSolve.setFocusTraversable(false);
-        GridPane.setConstraints(buttonSolve, 3, 5);
+        GridPane.setConstraints(buttonSolve, 3, NUMBER_ROWS-1);
         root.getChildren().add(buttonSolve);
 
         // Create operator buttons.
-        String[] operators = {"+", "-", "*", "/"};
-        for (int i = 0; i < operators.length; i++) {
-            String operator = operators[i];
-            Button buttonOperator = new Button(operator);
+        LinkedHashMap<String, String> OPERATOR_SYMBOLS = new LinkedHashMap<String, String>();
+        OPERATOR_SYMBOLS.put(PLUS_SYMBOL, PLUS_SYMBOL_DISPLAY);
+        OPERATOR_SYMBOLS.put(MINUS_SYMBOL, MINUS_SYMBOL_DISPLAY);
+        OPERATOR_SYMBOLS.put(MULTIPLY_SYMBOL, MULTIPLY_SYMBOL_DISPLAY);
+        OPERATOR_SYMBOLS.put(DIVIDE_SYMBOL, DIVIDE_SYMBOL_DISPLAY);
+        for (int i = 0; i < OPERATOR_SYMBOLS.size(); i++) {
+            String operator = (String)(OPERATOR_SYMBOLS.keySet().toArray()[i]);
+            String name = OPERATOR_SYMBOLS.get(operator);
+            Button buttonOperator = new Button(name);
             buttonOperator.setOnAction(event -> {
                 operate(operator);
                 display.setText(getDisplayText());
             });
             buttonOperator.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
             buttonOperator.setFocusTraversable(false);
-            GridPane.setConstraints(buttonOperator, 3, 4-i);
+            GridPane.setConstraints(buttonOperator, 3, (NUMBER_ROWS-2)-i);
             root.getChildren().add(buttonOperator);
         }
 
         // Create clear button.
-        Button buttonClear = new Button("C");
+        Button buttonClear = new Button(CLEAR_SYMBOL);
         buttonClear.setOnAction(event -> {
             clear();
             display.setText(getDisplayText());
@@ -156,10 +174,10 @@ public class Calculator extends Application {
         scene.setOnKeyTyped(event -> {
             String text = event.getCharacter();
             switch (text) {
-                case "+":
-                case "-":
-                case "*":
-                case "/":
+                case PLUS_SYMBOL:
+                case MINUS_SYMBOL:
+                case MULTIPLY_SYMBOL:
+                case DIVIDE_SYMBOL:
                     operate(text);
                     break;
                 default:
@@ -196,7 +214,7 @@ public class Calculator extends Application {
     // Enter the specified character into the current operand.
     private void enter(String text) {
         // Only add the character if it is alphanumeric or is a decimal point.
-        if (Character.isLetterOrDigit(text.charAt(0)) || (text.equals(".") && !this.operandCurrent.contains("."))) {
+        if (Character.isLetterOrDigit(text.charAt(0)) || (text.equals(DECIMAL_SYMBOL) && !this.operandCurrent.contains(DECIMAL_SYMBOL))) {
             // If the character is a zero, only add it if the current operand is not empty.
             if (!(text.equals("0") && this.operandCurrent.equals(DEFAULT_OPERAND_CURRENT))) {
                 // Clear if this an operation was just completed and is not part of an intermediate operation.
@@ -225,10 +243,10 @@ public class Calculator extends Application {
     // Invert the sign of the current operand.
     private void invert() {
         if (!this.operandCurrent.isEmpty()) {
-            if (this.operandCurrent.contains(MINUS_SIGN)) {
+            if (this.operandCurrent.contains(MINUS_SYMBOL)) {
                 this.operandCurrent = this.operandCurrent.substring(1, this.operandCurrent.length());
             } else {
-                this.operandCurrent = MINUS_SIGN + this.operandCurrent;
+                this.operandCurrent = MINUS_SYMBOL + this.operandCurrent;
             }
         }
     }
@@ -246,9 +264,11 @@ public class Calculator extends Application {
             }
         }
         // Add a "0" at the beginning if the first character is a decimal point.
-        if (text.charAt(0) == '.') {
+        if (text.charAt(0) == DECIMAL_SYMBOL.charAt(0)) {
             text = this.DEFAULT_DISPLAY_TEXT + text;
         }
+        // Replace the hyphen, if exists, with a minus sign.
+        text.replace(MINUS_SYMBOL, MINUS_SYMBOL_DISPLAY);
         return text;
     }
 
