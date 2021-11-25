@@ -34,6 +34,8 @@ public class Calculator extends Application {
     // The selected operation.
     static String operation = DEFAULT_OPERATION;
 
+    static final String MINUS_SIGN = "-";
+
     @Override
     public void start(Stage stage) throws IOException {
         // Create layout.
@@ -56,7 +58,7 @@ public class Calculator extends Application {
 
         // Create text display.
         Label display = new Label(DEFAULT_DISPLAY_TEXT);
-        display.setFont(Font.font("System", FontWeight.NORMAL, 40));
+        display.setFont(Font.font("System", FontWeight.NORMAL, 50));
         display.setAlignment(Pos.BASELINE_RIGHT);
         display.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         GridPane.setConstraints(display, 0, 0, 4, 1);
@@ -66,20 +68,20 @@ public class Calculator extends Application {
         Button[] buttons = new Button[10];
         for (int i = 0; i < buttons.length; i++) {
             String nameButton = String.valueOf(i);
-            Button buttonDigit = new Button(nameButton);
-            buttonDigit.setOnAction(event -> {
-                appendText(nameButton);
+            Button button = new Button(nameButton);
+            button.setOnAction(event -> {
+                enter(nameButton);
                 display.setText(getDisplayText());
             });
-            buttonDigit.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-            buttonDigit.setFocusTraversable(false);
-            buttons[i] = buttonDigit;
+            button.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            button.setFocusTraversable(false);
+            buttons[i] = button;
             if (i == 0) {
-                GridPane.setConstraints(buttonDigit, 0, 4, 2, 1);
+                GridPane.setConstraints(button, 1, 5);
             } else {
-                GridPane.setConstraints(buttonDigit, (i-1)%3, 3 - (i-1)/3);
+                GridPane.setConstraints(button, (i-1)%3, 4 - (i-1)/3);
             }
-            root.getChildren().add(buttonDigit);
+            root.getChildren().add(button);
         }
 
         // Create decimal point button.
@@ -90,10 +92,56 @@ public class Calculator extends Application {
         });
         buttonDecimal.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         buttonDecimal.setFocusTraversable(false);
-        GridPane.setConstraints(buttonDecimal, 2, 4);
+        GridPane.setConstraints(buttonDecimal, 2, 5);
         root.getChildren().add(buttonDecimal);
 
+        // Create invert sign button.
+        Button buttonInvert = new Button("+/-");
+        buttonInvert.setOnAction(event -> {
+            invert();
+            display.setText(getDisplayText());
+        });
+        buttonInvert.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        buttonInvert.setFocusTraversable(false);
+        GridPane.setConstraints(buttonInvert, 0, 5);
+        root.getChildren().add(buttonInvert);
+
+        // Create solve button.
+        Button buttonSolve = new Button("=");
+        buttonSolve.setOnAction(event -> {
+            solve();
+            display.setText(getDisplayText());
+        });
+        buttonSolve.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        buttonSolve.setFocusTraversable(false);
+        GridPane.setConstraints(buttonSolve, 3, 5);
+        root.getChildren().add(buttonSolve);
+
         // Create operator buttons.
+        String[] operators = {"+", "-", "*", "/"};
+        for (int i = 0; i < operators.length; i++) {
+            String operator = operators[i];
+            Button buttonOperator = new Button(operator);
+            buttonOperator.setOnAction(event -> {
+                operate(operator);
+                display.setText(getDisplayText());
+            });
+            buttonOperator.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            buttonOperator.setFocusTraversable(false);
+            GridPane.setConstraints(buttonOperator, 3, 4-i);
+            root.getChildren().add(buttonOperator);
+        }
+
+        // Create clear button.
+        Button buttonClear = new Button("C");
+        buttonClear.setOnAction(event -> {
+            clear();
+            display.setText(getDisplayText());
+        });
+        buttonClear.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        buttonClear.setFocusTraversable(false);
+        GridPane.setConstraints(buttonClear, 0, 1);
+        root.getChildren().add(buttonClear);
 
         // Create scene.
         Scene scene = new Scene(root);
@@ -106,24 +154,10 @@ public class Calculator extends Application {
                 case "-":
                 case "*":
                 case "/":
-                    if (!operandCurrent.isEmpty()) {
-                        // Store the entered operand.
-                        if (operandStored.isEmpty()) {
-                            operandStored = new String(operandCurrent);
-                        // Calculate the stored operand using the specified operation.
-                        } else {
-                            operandStored = calculate();
-                        }
-                    }
-                    operandCurrent = DEFAULT_OPERAND_CURRENT;
-                    operation = text;
+                    operate(text);
                     break;
                 default:
-                    // Clear if this key press follows a completed operation and is not part of an intermediate operation.
-                    if (!operandStored.isEmpty() && operation.isEmpty()) {
-                        clear();
-                    }
-                    appendText(text);
+                    enter(text);
                     break;
             }
             display.setText(getDisplayText());
@@ -131,9 +165,7 @@ public class Calculator extends Application {
         scene.setOnKeyReleased(event -> {
             switch (event.getCode()) {
                 case ENTER:
-                    operandStored = calculate();
-                    operandCurrent = DEFAULT_OPERAND_CURRENT;
-                    operation = DEFAULT_OPERATION;
+                    solve();
                     break;
                 case ESCAPE:
                     clear();
@@ -158,49 +190,84 @@ public class Calculator extends Application {
     // Get the string showing the current operand to be displayed.
     private String getDisplayText() {
         String text;
-        if (!operandCurrent.isEmpty()) {
-            text = operandCurrent;
+        if (!this.operandCurrent.isEmpty()) {
+            text = this.operandCurrent;
         } else {
-            if (operandStored.isEmpty()) {
-                text = DEFAULT_DISPLAY_TEXT;
+            if (this.operandStored.isEmpty()) {
+                text = this.DEFAULT_DISPLAY_TEXT;
             } else {
-                text = operandStored;
+                text = this.operandStored;
             }
         }
         // Add a "0" at the beginning if the first character is a decimal point.
         if (text.charAt(0) == '.') {
-            text = DEFAULT_DISPLAY_TEXT + text;
+            text = this.DEFAULT_DISPLAY_TEXT + text;
         }
         return text;
     }
 
     // Add text to the display.
     private void appendText(String text) {
-        if (Character.isLetterOrDigit(text.charAt(0)) || text.equals(".") && !operandCurrent.contains(".")) {
-            operandCurrent += text;
+        if (Character.isLetterOrDigit(text.charAt(0)) || text.equals(".") && !this.operandCurrent.contains(".")) {
+            this.operandCurrent += text;
         }
     }
 
     // Remove the last character from the display.
     private void removeCharacter() {
-        switch (operandCurrent.length()) {
+        switch (this.operandCurrent.length()) {
             case 0:
                 break;
             case 1:
-                operandCurrent = DEFAULT_OPERAND_CURRENT;
+                this.operandCurrent = this.DEFAULT_OPERAND_CURRENT;
                 break;
             default:
-                operandCurrent = operandCurrent.substring(0, operandCurrent.length()-1);
+                this.operandCurrent = this.operandCurrent.substring(0, this.operandCurrent.length()-1);
                 break;
         }
     }
 
-    // Solve the stored operation with the stored and current operands and return the result as text.
+    // Enter the specified number into the current operand.
+    private void enter(String text) {
+        // Clear if this key press follows a completed operation and is not part of an intermediate operation.
+        if (!this.operandStored.isEmpty() && this.operation.isEmpty()) {
+            clear();
+        }
+        appendText(text);
+    }
+
+    // Invert the sign of the current operand.
+    private void invert() {
+        if (!this.operandCurrent.isEmpty()) {
+            if (this.operandCurrent.contains(MINUS_SIGN)) {
+                this.operandCurrent = this.operandCurrent.substring(1, this.operandCurrent.length());
+            } else {
+                this.operandCurrent = MINUS_SIGN + this.operandCurrent;
+            }
+        }
+    }
+
+    // Apply the specified operation.
+    private void operate(String operation) {
+        if (!this.operandCurrent.isEmpty()) {
+            if (this.operandStored.isEmpty()) {
+                // Store the entered operand.
+                this.operandStored = new String(this.operandCurrent);
+            } else {
+                // Calculate the stored operand using the specified operation.
+                this.operandStored = calculate();
+            }
+        }
+        this.operandCurrent = this.DEFAULT_OPERAND_CURRENT;
+        this.operation = operation;
+    }
+
+    // Solve the stored operation and operands and return the result as text.
     private String calculate() {
-        double operand1 = stringToDouble(operandStored);
-        double operand2 = stringToDouble(operandCurrent);
+        double operand1 = stringToDouble(this.operandStored);
+        double operand2 = stringToDouble(this.operandCurrent);
         double result = 0.0;
-        switch (operation) {
+        switch (this.operation) {
             case "+":
                 result = operand1 + operand2;
                 break;
@@ -219,11 +286,18 @@ public class Calculator extends Application {
         return text;
     }
 
+    // Solve the stored operation and operands and clear the stored operation.
+    private void solve() {
+        this.operandStored = calculate();
+        this.operandCurrent = this.DEFAULT_OPERAND_CURRENT;
+        this.operation = this.DEFAULT_OPERATION;
+    }
+
     // Reset the display and any stored operands.
     private void clear() {
-        operandStored = DEFAULT_OPERAND_STORED;
-        operandCurrent = DEFAULT_OPERAND_CURRENT;
-        operation = DEFAULT_OPERATION;
+        this.operandStored = this.DEFAULT_OPERAND_STORED;
+        this.operandCurrent = this.DEFAULT_OPERAND_CURRENT;
+        this.operation = this.DEFAULT_OPERATION;
     }
 
     // Convert a string to a double.
