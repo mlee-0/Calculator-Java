@@ -87,7 +87,7 @@ public class Calculator extends Application {
         // Create decimal point button.
         Button buttonDecimal = new Button(".");
         buttonDecimal.setOnAction(event -> {
-            appendText(buttonDecimal.getText());
+            enter(buttonDecimal.getText());
             display.setText(getDisplayText());
         });
         buttonDecimal.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
@@ -171,7 +171,7 @@ public class Calculator extends Application {
                     clear();
                     break;
                 case BACK_SPACE:
-                    removeCharacter();
+                    backspace();
                     break;
             }
             display.setText(getDisplayText());
@@ -206,17 +206,23 @@ public class Calculator extends Application {
         return text;
     }
 
-    // Add text to the display.
-    private void appendText(String text) {
+    // Enter the specified number into the current operand.
+    private void enter(String text) {
+        // Only add the character if it is alphanumeric or is a decimal point.
         if (Character.isLetterOrDigit(text.charAt(0)) || (text.equals(".") && !this.operandCurrent.contains("."))) {
+            // If the character is a zero, only add it if the current operand is not empty.
             if (!(text.equals("0") && this.operandCurrent.equals(DEFAULT_OPERAND_CURRENT))) {
+                // Clear if this an operation was just completed and is not part of an intermediate operation.
+                if (!this.operandStored.isEmpty() && this.operation.isEmpty()) {
+                    clear();
+                }
                 this.operandCurrent += text;
             }
         }
     }
 
     // Remove the last character from the display.
-    private void removeCharacter() {
+    private void backspace() {
         switch (this.operandCurrent.length()) {
             case 0:
                 break;
@@ -227,15 +233,6 @@ public class Calculator extends Application {
                 this.operandCurrent = this.operandCurrent.substring(0, this.operandCurrent.length()-1);
                 break;
         }
-    }
-
-    // Enter the specified number into the current operand.
-    private void enter(String text) {
-        // Clear if this key press follows a completed operation and is not part of an intermediate operation.
-        if (!this.operandStored.isEmpty() && this.operation.isEmpty()) {
-            clear();
-        }
-        appendText(text);
     }
 
     // Invert the sign of the current operand.
@@ -266,9 +263,9 @@ public class Calculator extends Application {
 
     // Solve the stored operation and operands and return the result as text.
     private String calculate() {
-        double operand1 = stringToDouble(this.operandStored);
-        double operand2 = stringToDouble(this.operandCurrent);
-        double result = 0.0;
+        double operand1 = stringToDouble(this.operandStored.isEmpty() ? DEFAULT_DISPLAY_TEXT : this.operandStored);
+        double operand2 = stringToDouble(this.operandCurrent.isEmpty() ? DEFAULT_DISPLAY_TEXT : this.operandCurrent);
+        double result;
         switch (this.operation) {
             case "+":
                 result = operand1 + operand2;
@@ -282,6 +279,8 @@ public class Calculator extends Application {
             case "/":
                 result = operand1 / operand2;
                 break;
+            default:
+                result = 0.0;
         }
         // Remove decimal point and successive digits if number is an integer.
         String text = (result % 1) == 0 ? String.valueOf((int)result): String.valueOf(result);
@@ -290,9 +289,11 @@ public class Calculator extends Application {
 
     // Solve the stored operation and operands and clear the stored operation.
     private void solve() {
-        this.operandStored = calculate();
-        this.operandCurrent = this.DEFAULT_OPERAND_CURRENT;
-        this.operation = this.DEFAULT_OPERATION;
+        if (!this.operandStored.isEmpty() && !this.operandCurrent.isEmpty()) {
+            this.operandStored = calculate();
+            this.operandCurrent = this.DEFAULT_OPERAND_CURRENT;
+            this.operation = this.DEFAULT_OPERATION;
+        }
     }
 
     // Reset the display and any stored operands.
