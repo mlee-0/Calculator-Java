@@ -11,6 +11,8 @@ import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -50,9 +52,11 @@ public class Calculator extends Application {
         }
         root.setPrefWidth(400);
         root.setPrefHeight(500);
+        root.setStyle("-fx-font-size: 20pt");
 
         // Create text display.
         Label display = new Label(DEFAULT_DISPLAY_TEXT);
+        display.setFont(Font.font("System", FontWeight.NORMAL, 40));
         display.setAlignment(Pos.BASELINE_RIGHT);
         display.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         GridPane.setConstraints(display, 0, 0, 4, 1);
@@ -79,13 +83,10 @@ public class Calculator extends Application {
         }
 
         // Create decimal point button.
-        String nameButtonDecimal = ".";
-        Button buttonDecimal = new Button(nameButtonDecimal);
+        Button buttonDecimal = new Button(".");
         buttonDecimal.setOnAction(event -> {
-            if (!operandCurrent.contains(nameButtonDecimal)) {
-                appendText(nameButtonDecimal);
-                display.setText(getDisplayText());
-            }
+            appendText(buttonDecimal.getText());
+            display.setText(getDisplayText());
         });
         buttonDecimal.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         buttonDecimal.setFocusTraversable(false);
@@ -118,13 +119,11 @@ public class Calculator extends Application {
                     operation = text;
                     break;
                 default:
-                    // Clear if an operation was completed and this is not an intermediate operation.
+                    // Clear if this key press follows a completed operation and is not part of an intermediate operation.
                     if (!operandStored.isEmpty() && operation.isEmpty()) {
                         clear();
                     }
-                    if (Character.isLetterOrDigit(text.charAt(0)) || text.equals('.')) {
-                        appendText(text);
-                    }
+                    appendText(text);
                     break;
             }
             display.setText(getDisplayText());
@@ -156,7 +155,7 @@ public class Calculator extends Application {
         launch();
     }
 
-    // Get the string to be displayed based on the current operand.
+    // Get the string showing the current operand to be displayed.
     private String getDisplayText() {
         String text;
         if (!operandCurrent.isEmpty()) {
@@ -168,12 +167,18 @@ public class Calculator extends Application {
                 text = operandStored;
             }
         }
+        // Add a "0" at the beginning if the first character is a decimal point.
+        if (text.charAt(0) == '.') {
+            text = DEFAULT_DISPLAY_TEXT + text;
+        }
         return text;
     }
 
     // Add text to the display.
     private void appendText(String text) {
-        operandCurrent += text;
+        if (Character.isLetterOrDigit(text.charAt(0)) || text.equals(".") && !operandCurrent.contains(".")) {
+            operandCurrent += text;
+        }
     }
 
     // Remove the last character from the display.
@@ -209,7 +214,9 @@ public class Calculator extends Application {
                 result = operand1 / operand2;
                 break;
         }
-        return String.valueOf(result);
+        // Remove decimal point and successive digits if number is an integer.
+        String text = (result % 1) == 0 ? String.valueOf((int)result): String.valueOf(result);
+        return text;
     }
 
     // Reset the display and any stored operands.
