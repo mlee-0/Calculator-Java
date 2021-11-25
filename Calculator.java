@@ -216,7 +216,7 @@ public class Calculator extends Application {
         // Only add the character if it is alphanumeric or is a decimal point.
         if (Character.isLetterOrDigit(text.charAt(0)) || (text.equals(DECIMAL_SYMBOL) && !this.operandCurrent.contains(DECIMAL_SYMBOL))) {
             // If the character is a zero, only add it if the current operand is not empty.
-            if (!(text.equals("0") && this.operandCurrent.equals(DEFAULT_OPERAND_CURRENT))) {
+            if (!(text.equals("0") && this.operandCurrent.equals("0"))) {
                 // Clear if this an operation was just completed and is not part of an intermediate operation.
                 if (!this.operandStored.isEmpty() && this.operation.isEmpty()) {
                     clear();
@@ -242,12 +242,16 @@ public class Calculator extends Application {
 
     // Invert the sign of the current operand.
     private void invert() {
-        if (!this.operandCurrent.isEmpty()) {
-            if (this.operandCurrent.contains(MINUS_SYMBOL)) {
-                this.operandCurrent = this.operandCurrent.substring(1, this.operandCurrent.length());
-            } else {
-                this.operandCurrent = MINUS_SYMBOL + this.operandCurrent;
-            }
+        // Copy the stored operand into the current operand in order to apply the inversion.
+        if (this.operandCurrent.isEmpty()) {
+            this.operandCurrent = new String(this.operandStored);
+            this.operandStored = DEFAULT_OPERAND_STORED;
+        }
+        // Invert sign.
+        if (this.operandCurrent.contains(MINUS_SYMBOL)) {
+            this.operandCurrent = this.operandCurrent.substring(1, this.operandCurrent.length());
+        } else {
+            this.operandCurrent = MINUS_SYMBOL + this.operandCurrent;
         }
     }
 
