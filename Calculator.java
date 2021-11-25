@@ -208,8 +208,10 @@ public class Calculator extends Application {
 
     // Add text to the display.
     private void appendText(String text) {
-        if (Character.isLetterOrDigit(text.charAt(0)) || text.equals(".") && !this.operandCurrent.contains(".")) {
-            this.operandCurrent += text;
+        if (Character.isLetterOrDigit(text.charAt(0)) || (text.equals(".") && !this.operandCurrent.contains("."))) {
+            if (!(text.equals("0") && this.operandCurrent.equals(DEFAULT_OPERAND_CURRENT))) {
+                this.operandCurrent += text;
+            }
         }
     }
 
