@@ -49,8 +49,11 @@ public class Calculator extends Application {
     static final String MULTIPLY_SYMBOL_DISPLAY = Character.toString('\u00d7');
     static final String DIVIDE_SYMBOL = "/";
     static final String DIVIDE_SYMBOL_DISPLAY = Character.toString('\u00f7');
+    static final String POWER_SYMBOL = "^";
+    static final String POWER_SYMBOL_DISPLAY = "^";
     static final String DECIMAL_SYMBOL = ".";
     static final String INVERT_SYMBOL = Character.toString('\u00b1');
+    static final String RANDOM_SYMBOL = "?";
     static final String SOLVE_SYMBOL = "=";
     static final String CLEAR_SYMBOL = "C";
 
@@ -114,16 +117,16 @@ public class Calculator extends Application {
         GridPane.setConstraints(buttonDecimal, 2, NUMBER_ROWS-1);
         root.getChildren().add(buttonDecimal);
 
-        // Create invert sign button.
-        Button buttonInvert = new Button(INVERT_SYMBOL);
-        buttonInvert.setOnAction(event -> {
-            invert();
+        // Create random number generator button.
+        Button buttonRandom = new Button(RANDOM_SYMBOL);
+        buttonRandom.setOnAction(event -> {
+            random();
             display.setText(getDisplayText());
         });
-        buttonInvert.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-        buttonInvert.setFocusTraversable(false);
-        GridPane.setConstraints(buttonInvert, 0, NUMBER_ROWS-1);
-        root.getChildren().add(buttonInvert);
+        buttonRandom.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        buttonRandom.setFocusTraversable(false);
+        GridPane.setConstraints(buttonRandom, 0, NUMBER_ROWS-1);
+        root.getChildren().add(buttonRandom);
 
         // Create solve button.
         Button buttonSolve = new Button(SOLVE_SYMBOL);
@@ -142,6 +145,7 @@ public class Calculator extends Application {
         OPERATOR_SYMBOLS.put(MINUS_SYMBOL, MINUS_SYMBOL_DISPLAY);
         OPERATOR_SYMBOLS.put(MULTIPLY_SYMBOL, MULTIPLY_SYMBOL_DISPLAY);
         OPERATOR_SYMBOLS.put(DIVIDE_SYMBOL, DIVIDE_SYMBOL_DISPLAY);
+        OPERATOR_SYMBOLS.put(POWER_SYMBOL, POWER_SYMBOL_DISPLAY);
         for (int i = 0; i < OPERATOR_SYMBOLS.size(); i++) {
             String operator = (String)(OPERATOR_SYMBOLS.keySet().toArray()[i]);
             String name = OPERATOR_SYMBOLS.get(operator);
@@ -152,7 +156,9 @@ public class Calculator extends Application {
             });
             buttonOperator.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
             buttonOperator.setFocusTraversable(false);
-            GridPane.setConstraints(buttonOperator, 3, (NUMBER_ROWS-2)-i);
+            int row = (NUMBER_ROWS - 2) - i;
+            int column = 3;
+            GridPane.setConstraints(buttonOperator, Math.min(column - (1-row), column), Math.max(1, row));
             root.getChildren().add(buttonOperator);
         }
 
@@ -167,6 +173,17 @@ public class Calculator extends Application {
         GridPane.setConstraints(buttonClear, 0, 1);
         root.getChildren().add(buttonClear);
 
+        // Create invert sign button.
+        Button buttonInvert = new Button(INVERT_SYMBOL);
+        buttonInvert.setOnAction(event -> {
+            invert();
+            display.setText(getDisplayText());
+        });
+        buttonInvert.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        buttonInvert.setFocusTraversable(false);
+        GridPane.setConstraints(buttonInvert, 1, 1);
+        root.getChildren().add(buttonInvert);
+
         // Create scene.
         Scene scene = new Scene(root);
 
@@ -178,6 +195,7 @@ public class Calculator extends Application {
                 case MINUS_SYMBOL:
                 case MULTIPLY_SYMBOL:
                 case DIVIDE_SYMBOL:
+                case POWER_SYMBOL:
                     operate(text);
                     break;
                 default:
@@ -244,7 +262,7 @@ public class Calculator extends Application {
     private void invert() {
         // Copy the stored operand into the current operand in order to apply the inversion.
         if (this.operandCurrent.isEmpty()) {
-            this.operandCurrent = new String(this.operandStored);
+            this.operandCurrent = this.operandStored;
             this.operandStored = DEFAULT_OPERAND_STORED;
         }
         // Invert sign.
@@ -253,6 +271,11 @@ public class Calculator extends Application {
         } else {
             this.operandCurrent = MINUS_SYMBOL + this.operandCurrent;
         }
+    }
+
+    // Generate a random number and replace the current operand.
+    private void random() {
+        this.operandCurrent = String.valueOf((int)(Math.random() * 100));
     }
 
     // Get the string showing the current operand to be displayed.
@@ -296,20 +319,24 @@ public class Calculator extends Application {
         }
         // Perform the stored operation on the operands.
         switch (this.operation) {
-            case "+":
+            case PLUS_SYMBOL:
                 result = operand1 + operand2;
                 break;
-            case "-":
+            case MINUS_SYMBOL:
                 result = operand1 - operand2;
                 break;
-            case "*":
+            case MULTIPLY_SYMBOL:
                 result = operand1 * operand2;
                 break;
-            case "/":
+            case DIVIDE_SYMBOL:
                 result = operand1 / operand2;
+                break;
+            case POWER_SYMBOL:
+                result = Math.pow(operand1, operand2);
                 break;
             default:
                 result = Double.parseDouble(DEFAULT_DISPLAY_TEXT);
+                break;
         }
         // Remove decimal point and successive digits if number is an integer.
         String text = (result % 1) == 0 ? String.valueOf((int)result): String.valueOf(result);
