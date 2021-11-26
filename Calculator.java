@@ -38,7 +38,7 @@ public class Calculator extends Application {
     static String operation = DEFAULT_OPERATION;
 
     // Number of digits to which results are rounded to.
-    static final int MAX_PRECISION = 14;
+    static final int MAX_PRECISION = 15;
 
     // Layout properties.
     static final int NUMBER_ROWS = 6;
@@ -350,12 +350,15 @@ public class Calculator extends Application {
             }
         }
         // Perform the stored operation on the operands.
+        boolean eliminateRoundoffError = false;
         switch (this.operation) {
             case PLUS_SYMBOL:
                 result = operands[0] + operands[1];
+                eliminateRoundoffError = true;
                 break;
             case MINUS_SYMBOL:
                 result = operands[0] - operands[1];
+                eliminateRoundoffError = true;
                 break;
             case MULTIPLY_SYMBOL:
                 result = operands[0] * operands[1];
@@ -380,10 +383,16 @@ public class Calculator extends Application {
                 text = UNDERFLOW_MESSAGE;
             }
             else {
-                // Round the result to a number of digits based on how many digits precede the decimal point.
-                if (result != 0.0) {
-                    int numberLeadingDigits = (int) Math.floor(Math.log10(result));
-                    int precision = MAX_PRECISION - numberLeadingDigits;
+                // Round the result to a number of digits based on how many digits follow the decimal point.
+                if (eliminateRoundoffError && result != 0.0) {
+                    int precision = 0;
+                    for (int i = 0; i < operands.length; i++) {
+                        String operandText = String.valueOf(operands[0]);
+                        int numberTrailingDigits = (operandText.contains(DECIMAL_SYMBOL) ? operandText.length() - operandText.indexOf(DECIMAL_SYMBOL) : 0);
+                        if (numberTrailingDigits > precision && numberTrailingDigits <= MAX_PRECISION) {
+                            precision = numberTrailingDigits;
+                        }
+                    }
                     result = (double) (Math.round(result * Math.pow(10,precision)) / Math.pow(10,precision));
                 }
                 // Remove decimal point and successive digits if number represents an integer.
