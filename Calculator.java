@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import javafx.application.Application;
@@ -39,6 +40,10 @@ public class Calculator extends Application {
     // Layout properties.
     static final int NUMBER_ROWS = 6;
     static final int NUMBER_COLUMNS = 4;
+    // Font sizes.
+    static final int FONT_SIZE_DEFAULT = 25;
+    static final int FONT_SIZE_OPERATORS = 25;
+    static final int FONT_SIZE_DISPLAY = 50;
 
     // Operator symbols.
     static final String PLUS_SYMBOL = "+";
@@ -79,11 +84,11 @@ public class Calculator extends Application {
         }
         root.setPrefWidth(400);
         root.setPrefHeight(500);
-        root.setStyle("-fx-font-size: 25pt");
+        root.setStyle(String.format("-fx-font-size: %dpx", FONT_SIZE_DEFAULT));
 
         // Create text display.
         Label display = new Label(DEFAULT_DISPLAY_TEXT);
-        display.setFont(Font.font("", FontWeight.NORMAL, 50));
+        display.setFont(Font.font("", FontWeight.NORMAL, FONT_SIZE_DISPLAY));
         display.setAlignment(Pos.BASELINE_RIGHT);
         display.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         GridPane.setConstraints(display, 0, 0, NUMBER_COLUMNS, 1);
@@ -139,6 +144,7 @@ public class Calculator extends Application {
         });
         buttonSolve.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         buttonSolve.setFocusTraversable(false);
+        buttonSolve.setFont(Font.font("", FontWeight.NORMAL, FONT_SIZE_OPERATORS));
         GridPane.setConstraints(buttonSolve, 3, NUMBER_ROWS-1);
         root.getChildren().add(buttonSolve);
 
@@ -159,6 +165,7 @@ public class Calculator extends Application {
             });
             buttonOperator.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
             buttonOperator.setFocusTraversable(false);
+            buttonOperator.setFont(Font.font("", FontWeight.NORMAL, FONT_SIZE_OPERATORS));
             int row = (NUMBER_ROWS - 2) - i;
             int column = 3;
             GridPane.setConstraints(buttonOperator, Math.min(column - (1-row), column), Math.max(1, row));
@@ -190,7 +197,27 @@ public class Calculator extends Application {
         // Create scene.
         Scene scene = new Scene(root);
 
-        // Define key typed and key pressed event handlers.
+        // Define key-button mappings.
+//        HashMap<KeyCode, Button> buttonMapping = new HashMap<KeyCode, Button>();
+//        buttonMapping.put(KeyCode.ENTER, buttonSolve);
+//        buttonMapping.put(KeyCode.ESCAPE, buttonClear);
+//        buttonMapping.put(KeyCode.DIGIT0, buttonsDigit[0]);
+//        buttonMapping.put(KeyCode.DIGIT1, buttonsDigit[1]);
+//        buttonMapping.put(KeyCode.DIGIT2, buttonsDigit[2]);
+//        buttonMapping.put(KeyCode.DIGIT3, buttonsDigit[3]);
+//        buttonMapping.put(KeyCode.DIGIT4, buttonsDigit[4]);
+//        buttonMapping.put(KeyCode.DIGIT5, buttonsDigit[5]);
+//        buttonMapping.put(KeyCode.DIGIT6, buttonsDigit[6]);
+//        buttonMapping.put(KeyCode.DIGIT7, buttonsDigit[7]);
+//        buttonMapping.put(KeyCode.DIGIT8, buttonsDigit[8]);
+//        buttonMapping.put(KeyCode.DIGIT9, buttonsDigit[9]);
+//        buttonMapping.put(KeyCode.PLUS, buttonsOperator[0]);
+//        buttonMapping.put(KeyCode.MINUS, buttonsOperator[1]);
+//        buttonMapping.put(KeyCode.ASTERISK, buttonsOperator[2]);
+//        buttonMapping.put(KeyCode.SLASH, buttonsOperator[3]);
+//        buttonMapping.put(KeyCode.CIRCUMFLEX, buttonsOperator[4]);
+
+        // Define key event handlers.
         scene.setOnKeyTyped(event -> {
             String text = event.getCharacter();
             switch (text) {
@@ -210,6 +237,9 @@ public class Calculator extends Application {
         scene.setOnKeyReleased(event -> {
             switch (event.getCode()) {
                 case ENTER:
+//                    Event.fireEvent(buttonSolve, new MouseEvent(
+//                            MouseEvent.MOUSE_CLICKED, 0, 0, 0, 0, MouseButton.PRIMARY, 1, false, false, false, false, true, false, false, false, false, false, null
+//                    ));
                     solve();
                     break;
                 case ESCAPE:
