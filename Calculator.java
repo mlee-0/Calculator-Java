@@ -269,11 +269,15 @@ public class Calculator extends Application {
     private void enter(String text) {
         // Only add the character if it is alphanumeric or is a decimal point.
         if (Character.isLetterOrDigit(text.charAt(0)) || (text.equals(DECIMAL_SYMBOL) && !this.operandCurrent.contains(DECIMAL_SYMBOL))) {
-            // If the character is a zero, only add it if the current operand is not empty.
+            // Do not add the character if it is a zero and the current operand is "0".
             if (!(text.equals("0") && this.operandCurrent.equals("0"))) {
                 // Clear if this an operation was just completed and is not part of an intermediate operation.
                 if (!this.operandStored.isEmpty() && this.operation.isEmpty()) {
                     clear();
+                }
+                // If the operand only contains "0", remove it.
+                if (this.operandCurrent.equals("0")) {
+                    this.operandCurrent = DEFAULT_OPERAND_CURRENT;
                 }
                 this.operandCurrent += text;
             }
