@@ -27,6 +27,8 @@ public class Calculator extends Application {
     static final String DEFAULT_OPERAND_STORED = "";
     // Default text for the current operand.
     static final String DEFAULT_OPERAND_CURRENT = "";
+    // Default text for the repeated operand.
+    static final String DEFAULT_OPERAND_REPEATED = "";
     // Default operation value.
     static final String DEFAULT_OPERATION = "";
 
@@ -34,8 +36,12 @@ public class Calculator extends Application {
     static String operandStored = DEFAULT_OPERAND_STORED;
     // The current operand being entered by the user.
     static String operandCurrent = DEFAULT_OPERAND_CURRENT;
+    // The operand used by repeated calculations when no explicitly operands are input.
+    static String operandRepeated = DEFAULT_OPERAND_REPEATED;
     // The selected operation.
     static String operation = DEFAULT_OPERATION;
+    // The previous operation, which is stored after a solve.
+    static String operationRepeated = DEFAULT_OPERATION;
 
     // Number of digits to which results are rounded to.
     static final int MAX_PRECISION = 15;
@@ -175,6 +181,13 @@ public class Calculator extends Application {
             root.getChildren().add(buttonOperator);
         }
 
+        // Create backspace button.
+        Button buttonBackspace = new Button();
+        buttonBackspace.setOnAction(event -> {
+            backspace();
+            display.setText(getDisplayText());
+        });
+
         // Create clear button.
         Button buttonClear = new Button(CLEAR_SYMBOL);
         buttonClear.setOnAction(event -> {
@@ -240,19 +253,15 @@ public class Calculator extends Application {
         scene.setOnKeyReleased(event -> {
             switch (event.getCode()) {
                 case ENTER:
-//                    Event.fireEvent(buttonSolve, new MouseEvent(
-//                            MouseEvent.MOUSE_CLICKED, 0, 0, 0, 0, MouseButton.PRIMARY, 1, false, false, false, false, true, false, false, false, false, false, null
-//                    ));
-                    solve();
+                    buttonSolve.fire();
                     break;
                 case ESCAPE:
-                    clear();
+                    buttonClear.fire();
                     break;
                 case BACK_SPACE:
-                    backspace();
+                    buttonBackspace.fire();
                     break;
             }
-            display.setText(getDisplayText());
         });
 
         // Create window.
@@ -341,21 +350,23 @@ public class Calculator extends Application {
 
     // Solve the stored operation and operands and return the result as text.
     private String calculate() {
-        double[] operands = new double[2];
-        double result;
         // Convert the operands to doubles.
+        double[] operands = new double[2];
         for (int i = 0; i < operands.length; i++) {
             try {
-                String text = i == 0 ? this.operandStored : this.operandCurrent;
+                String text = i == 0 ? this.operandStored : (!this.operandCurrent.equals(DEFAULT_OPERAND_CURRENT) ? this.operandCurrent : this.operandRepeated);
                 operands[i] = Double.parseDouble(text);
             }
             catch (NumberFormatException e) {
                 operands[i] = Double.parseDouble(DEFAULT_DISPLAY_TEXT);
             }
         }
-        // Perform the stored operation on the operands.
+
+        // Perform the calculation on the operands, using the stored operation if no current operation exists.
+        double result;
+        String operation = !this.operation.equals(DEFAULT_OPERATION) ? this.operation : this.operationRepeated;
         boolean eliminateRoundoffError = false;
-        switch (this.operation) {
+        switch (operation) {
             case PLUS_SYMBOL:
                 result = operands[0] + operands[1];
                 eliminateRoundoffError = true;
@@ -412,11 +423,12 @@ public class Calculator extends Application {
     // Apply the specified operation.
     private void operate(String operation) {
         if (!this.operandCurrent.isEmpty()) {
+            // Store the entered operand.
             if (this.operandStored.isEmpty()) {
-                // Store the entered operand.
                 this.operandStored = new String(this.operandCurrent);
-            } else {
-                // Calculate the stored operand using the specified operation.
+            }
+            // Calculate the specified operation on the existing operands and store the result as the stored operand.
+            else {
                 this.operandStored = calculate();
             }
         }
@@ -426,7 +438,21 @@ public class Calculator extends Application {
 
     // Solve the stored operation and operands and clear the stored operation.
     private void solve() {
-        if (!this.operandStored.isEmpty() && !this.operandCurrent.isEmpty()) {
+        // Store the current operand and operation for repeated calculations.
+        if (!this.operandCurrent.equals(this.DEFAULT_OPERAND_CURRENT)) {
+            this.operandRepeated = this.operandCurrent;
+        }
+        if (!this.operation.equals(this.DEFAULT_OPERATION)) {
+            if (!this.operandCurrent.equals(this.DEFAULT_OPERAND_CURRENT)) {
+                this.operationRepeated = this.operation;
+            }
+            // Revert to the previously entered operation if a new operation was entered but no operand was entered.
+            else {
+                this.operation = this.operationRepeated;
+            }
+        }
+
+        if (!this.operandStored.isEmpty() && (!this.operandCurrent.isEmpty() || !this.operandRepeated.isEmpty())) {
             this.operandStored = calculate();
             this.operandCurrent = this.DEFAULT_OPERAND_CURRENT;
             this.operation = this.DEFAULT_OPERATION;
@@ -435,8 +461,10 @@ public class Calculator extends Application {
 
     // Reset the display and any stored operands.
     private void clear() {
-        this.operandStored = this.DEFAULT_OPERAND_STORED;
         this.operandCurrent = this.DEFAULT_OPERAND_CURRENT;
+        this.operandStored = this.DEFAULT_OPERAND_STORED;
+        this.operandRepeated = this.DEFAULT_OPERAND_REPEATED;
         this.operation = this.DEFAULT_OPERATION;
+        this.operationRepeated = this.DEFAULT_OPERATION;
     }
 }
