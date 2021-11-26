@@ -37,6 +37,9 @@ public class Calculator extends Application {
     // The selected operation.
     static String operation = DEFAULT_OPERATION;
 
+    // Number of digits to which results are rounded to.
+    static final int MAX_PRECISION = 14;
+
     // Layout properties.
     static final int NUMBER_ROWS = 6;
     static final int NUMBER_COLUMNS = 4;
@@ -334,53 +337,61 @@ public class Calculator extends Application {
 
     // Solve the stored operation and operands and return the result as text.
     private String calculate() {
-        double operand1;
-        double operand2;
+        double[] operands = new double[2];
         double result;
         // Convert the operands to doubles.
-        try {
-            operand1 = Double.parseDouble(this.operandStored);
-        }
-        catch (NumberFormatException e) {
-            operand1 = Double.parseDouble(DEFAULT_DISPLAY_TEXT);
-        }
-        try {
-            operand2 = Double.parseDouble(this.operandCurrent);
-        }
-        catch (NumberFormatException e) {
-            operand2 = Double.parseDouble(DEFAULT_DISPLAY_TEXT);
+        for (int i = 0; i < operands.length; i++) {
+            try {
+                String text = i == 0 ? this.operandStored : this.operandCurrent;
+                operands[i] = Double.parseDouble(text);
+            }
+            catch (NumberFormatException e) {
+                operands[i] = Double.parseDouble(DEFAULT_DISPLAY_TEXT);
+            }
         }
         // Perform the stored operation on the operands.
         switch (this.operation) {
             case PLUS_SYMBOL:
-                result = operand1 + operand2;
+                result = operands[0] + operands[1];
                 break;
             case MINUS_SYMBOL:
-                result = operand1 - operand2;
+                result = operands[0] - operands[1];
                 break;
             case MULTIPLY_SYMBOL:
-                result = operand1 * operand2;
+                result = operands[0] * operands[1];
                 break;
             case DIVIDE_SYMBOL:
-                result = operand1 / operand2;
+                result = operands[0] / operands[1];
                 break;
             case POWER_SYMBOL:
-                result = Math.pow(operand1, operand2);
+                result = Math.pow(operands[0], operands[1]);
                 break;
             default:
                 result = Double.parseDouble(DEFAULT_DISPLAY_TEXT);
                 break;
         }
-        // Remove decimal point and successive digits if number is an integer.
+        // Convert the result to text.
         String text;
-        if ((long)result == Long.MAX_VALUE) {
-            text = OVERFLOW_MESSAGE;
-        }
-        else if ((long)result == Long.MIN_VALUE) {
-            text = UNDERFLOW_MESSAGE;
+        if (Double.isFinite(result)) {
+            if ((long)result == Long.MAX_VALUE) {
+                text = OVERFLOW_MESSAGE;
+            }
+            else if ((long)result == Long.MIN_VALUE) {
+                text = UNDERFLOW_MESSAGE;
+            }
+            else {
+                // Round the result to a number of digits based on how many digits precede the decimal point.
+                if (result != 0.0) {
+                    int numberLeadingDigits = (int) Math.floor(Math.log10(result));
+                    int precision = MAX_PRECISION - numberLeadingDigits;
+                    result = (double) (Math.round(result * Math.pow(10,precision)) / Math.pow(10,precision));
+                }
+                // Remove decimal point and successive digits if number represents an integer.
+                text = (result % 1) == 0 ? String.valueOf((long)result) : String.valueOf(result);
+            }
         }
         else {
-            text = (result % 1) == 0 ? String.valueOf((long)result): String.valueOf(result);
+            text = String.valueOf(result);
         }
         return text;
     }
