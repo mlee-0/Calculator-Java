@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
@@ -10,6 +11,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.RowConstraints;
@@ -22,6 +24,8 @@ import javafx.stage.Stage;
 
 public class Calculator extends Application {
     static final String PROGRAM_NAME = "Calculator";
+    static final String FILENAME_LOGO = "logo.png";
+    static final String FOLDER_RESOURCES = "src";
 
     // Default text displayed at the top.
     static final String DEFAULT_DISPLAY_TEXT = "0";
@@ -272,6 +276,7 @@ public class Calculator extends Application {
         // Create window.
         stage.setScene(scene);
         stage.setTitle(PROGRAM_NAME);
+        stage.getIcons().add(new Image(Paths.get(FOLDER_RESOURCES, FILENAME_LOGO).toString()));
         stage.show();
     }
 
