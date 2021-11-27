@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -10,14 +9,12 @@ import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
@@ -25,7 +22,7 @@ import javafx.stage.Stage;
 public class Calculator extends Application {
     static final String PROGRAM_NAME = "Calculator";
     static final String FILENAME_LOGO = "logo.png";
-    static final String FOLDER_RESOURCES = "src";
+    static final String FOLDER_RESOURCES = ".";
 
     // Default text displayed at the top.
     static final String DEFAULT_DISPLAY_TEXT = "0";
@@ -81,7 +78,7 @@ public class Calculator extends Application {
     static final String UNDERFLOW_MESSAGE = "Underflow";
 
     @Override
-    public void start(Stage stage) throws IOException {
+    public void start(Stage stage) {
         // Create layout.
         GridPane root = new GridPane();
         root.setVgap(5);
@@ -89,12 +86,12 @@ public class Calculator extends Application {
         root.setPadding(new Insets(10, 10, 10, 10));
         for (int i = 0; i < NUMBER_ROWS; i++) {
             RowConstraints row = new RowConstraints();
-            row.setPercentHeight(100 / NUMBER_ROWS);
+            row.setPercentHeight(100.0 / NUMBER_ROWS);
             root.getRowConstraints().add(row);
         }
         for (int i = 0; i < NUMBER_COLUMNS; i++) {
             ColumnConstraints column = new ColumnConstraints();
-            column.setPercentWidth(100 / NUMBER_COLUMNS);
+            column.setPercentWidth(100.0 / NUMBER_COLUMNS);
             root.getColumnConstraints().add(column);
         }
         root.setPrefWidth(400);
@@ -164,7 +161,7 @@ public class Calculator extends Application {
         root.getChildren().add(buttonSolve);
 
         // Create operator buttons.
-        LinkedHashMap<String, String> OPERATOR_SYMBOLS = new LinkedHashMap<String, String>();
+        LinkedHashMap<String, String> OPERATOR_SYMBOLS = new LinkedHashMap<>();
         OPERATOR_SYMBOLS.put(PLUS_SYMBOL, PLUS_SYMBOL_DISPLAY);
         OPERATOR_SYMBOLS.put(MINUS_SYMBOL, MINUS_SYMBOL_DISPLAY);
         OPERATOR_SYMBOLS.put(MULTIPLY_SYMBOL, MULTIPLY_SYMBOL_DISPLAY);
@@ -220,7 +217,7 @@ public class Calculator extends Application {
 
         // Create scene.
         Scene scene = new Scene(root);// Define key-button mappings. Each value is either a Button or a 2-length array of Buttons, where the first Button is the default and the second Button is the button to use if Shift is used with the key.
-        HashMap<KeyCode, Object> buttonMapping = new HashMap<KeyCode, Object>();
+        HashMap<KeyCode, Object> buttonMapping = new HashMap<>();
         buttonMapping.put(KeyCode.ENTER, buttonSolve);
         buttonMapping.put(KeyCode.ESCAPE, buttonClear);
         buttonMapping.put(KeyCode.BACK_SPACE, buttonBackspace);
@@ -255,29 +252,30 @@ public class Calculator extends Application {
         buttonMapping.put(KeyCode.DECIMAL, buttonDecimal);
 
         // Create event handler for key events.
-        EventHandler<KeyEvent> handlerKey = new EventHandler<KeyEvent>() {
-            public void handle(KeyEvent event) {
-                KeyCode code = event.getCode();
-                if (buttonMapping.containsKey(code)) {
-                    // Get the button to use.
-                    Object value = buttonMapping.get(code);
-                    Button button;
-                    if (value.getClass().isArray()){
-                        button = event.isShiftDown() ? ((Button[])value)[1] : ((Button[])value)[0];
-                    }
-                    else {
-                        button = (Button)value;
-                    }
-                    // Highlight the button.
-                    if (event.getEventType() == KeyEvent.KEY_PRESSED) {
-                        button.arm();
-                    }
-                    // Perform the action and un-highlight the button.
-                    else if (event.getEventType() == KeyEvent.KEY_RELEASED) {
-                        button.fire();
-                        button.disarm();
-                    }
+        EventHandler<KeyEvent> handlerKey = event -> {
+            Object value = buttonMapping.get(event.getCode());
+            if (value == null) {
+                return;
+            }
+            // Get the button to use.
+            Button button;
+            if (value.getClass().isArray()){
+                button = event.isShiftDown() ? ((Button[])value)[1] : ((Button[])value)[0];
+            }
+            else {
+                if (event.isShiftDown()) {
+                    return;
                 }
+                button = (Button)value;
+            }
+            // Highlight the button.
+            if (event.getEventType() == KeyEvent.KEY_PRESSED) {
+                button.arm();
+            }
+            // Perform the action and un-highlight the button.
+            else if (event.getEventType() == KeyEvent.KEY_RELEASED) {
+                button.fire();
+                button.disarm();
             }
         };
 
@@ -299,32 +297,32 @@ public class Calculator extends Application {
     // Enter the specified character into the current operand.
     private void enter(String text) {
         // Only add the character if it is alphanumeric or is a decimal point.
-        if (Character.isLetterOrDigit(text.charAt(0)) || (text.equals(DECIMAL_SYMBOL) && !this.operandCurrent.contains(DECIMAL_SYMBOL))) {
+        if (Character.isLetterOrDigit(text.charAt(0)) || (text.equals(DECIMAL_SYMBOL) && !operandCurrent.contains(DECIMAL_SYMBOL))) {
             // Do not add the character if it is a zero and the current operand is "0".
-            if (!(text.equals("0") && this.operandCurrent.equals("0"))) {
+            if (!(text.equals("0") && operandCurrent.equals("0"))) {
                 // Clear if this an operation was just completed and is not part of an intermediate operation.
-                if (!this.operandStored.isEmpty() && this.operation.isEmpty()) {
+                if (!operandStored.isEmpty() && operation.isEmpty()) {
                     clear();
                 }
                 // If the operand only contains "0", remove it.
-                if (this.operandCurrent.equals("0")) {
-                    this.operandCurrent = DEFAULT_OPERAND_CURRENT;
+                if (operandCurrent.equals("0")) {
+                    operandCurrent = DEFAULT_OPERAND_CURRENT;
                 }
-                this.operandCurrent += text;
+                operandCurrent += text;
             }
         }
     }
 
     // Remove the last character from the current operand.
     private void backspace() {
-        switch (this.operandCurrent.length()) {
+        switch (operandCurrent.length()) {
             case 0:
                 break;
             case 1:
-                this.operandCurrent = this.DEFAULT_OPERAND_CURRENT;
+                operandCurrent = DEFAULT_OPERAND_CURRENT;
                 break;
             default:
-                this.operandCurrent = this.operandCurrent.substring(0, this.operandCurrent.length()-1);
+                operandCurrent = operandCurrent.substring(0, operandCurrent.length()-1);
                 break;
         }
     }
@@ -332,41 +330,41 @@ public class Calculator extends Application {
     // Invert the sign of the current operand.
     private void invert() {
         // Copy the stored operand into the current operand in order to apply the inversion.
-        if (this.operandCurrent.isEmpty()) {
-            this.operandCurrent = this.operandStored;
-            this.operandStored = DEFAULT_OPERAND_STORED;
+        if (operandCurrent.isEmpty()) {
+            operandCurrent = operandStored;
+            operandStored = DEFAULT_OPERAND_STORED;
         }
         // Invert sign.
-        if (this.operandCurrent.contains(MINUS_SYMBOL)) {
-            this.operandCurrent = this.operandCurrent.substring(1, this.operandCurrent.length());
+        if (operandCurrent.contains(MINUS_SYMBOL)) {
+            operandCurrent = operandCurrent.substring(1);
         } else {
-            this.operandCurrent = MINUS_SYMBOL + this.operandCurrent;
+            operandCurrent = MINUS_SYMBOL + operandCurrent;
         }
     }
 
     // Generate a random number and replace the current operand.
     private void random() {
-        this.operandCurrent = String.valueOf((int)(Math.random() * 100));
+        operandCurrent = String.valueOf((int)(Math.random() * 100));
     }
 
     // Get the string showing the current operand to be displayed.
     private String getDisplayText() {
         String text;
-        if (!this.operandCurrent.isEmpty()) {
-            text = this.operandCurrent;
+        if (!operandCurrent.isEmpty()) {
+            text = operandCurrent;
         } else {
-            if (this.operandStored.isEmpty()) {
-                text = this.DEFAULT_DISPLAY_TEXT;
+            if (operandStored.isEmpty()) {
+                text = DEFAULT_DISPLAY_TEXT;
             } else {
-                text = this.operandStored;
+                text = operandStored;
             }
         }
         // Add a "0" at the beginning if the first character is a decimal point.
         if (text.charAt(0) == DECIMAL_SYMBOL.charAt(0)) {
-            text = this.DEFAULT_DISPLAY_TEXT + text;
+            text = DEFAULT_DISPLAY_TEXT + text;
         }
         // Replace the hyphen, if exists, with a minus sign.
-        text.replace(MINUS_SYMBOL, MINUS_SYMBOL_DISPLAY);
+        text = text.replace(MINUS_SYMBOL, MINUS_SYMBOL_DISPLAY);
         return text;
     }
 
@@ -376,7 +374,7 @@ public class Calculator extends Application {
         double[] operands = new double[2];
         for (int i = 0; i < operands.length; i++) {
             try {
-                String text = i == 0 ? this.operandStored : (!this.operandCurrent.equals(DEFAULT_OPERAND_CURRENT) ? this.operandCurrent : this.operandRepeated);
+                String text = i == 0 ? operandStored : (!operandCurrent.equals(DEFAULT_OPERAND_CURRENT) ? operandCurrent : operandRepeated);
                 operands[i] = Double.parseDouble(text);
             }
             catch (NumberFormatException e) {
@@ -386,9 +384,8 @@ public class Calculator extends Application {
 
         // Perform the calculation on the operands, using the stored operation if no current operation exists.
         double result;
-        String operation = !this.operation.equals(DEFAULT_OPERATION) ? this.operation : this.operationRepeated;
         boolean eliminateRoundoffError = false;
-        switch (operation) {
+        switch (!operation.equals(DEFAULT_OPERATION) ? operation : operationRepeated) {
             case PLUS_SYMBOL:
                 result = operands[0] + operands[1];
                 eliminateRoundoffError = true;
@@ -430,7 +427,7 @@ public class Calculator extends Application {
                             precision = numberTrailingDigits;
                         }
                     }
-                    result = (double) (Math.round(result * Math.pow(10,precision)) / Math.pow(10,precision));
+                    result = Math.round(result * Math.pow(10,precision)) / Math.pow(10,precision);
                 }
                 // Remove decimal point and successive digits if number represents an integer.
                 text = (result % 1) == 0 ? String.valueOf((long)result) : String.valueOf(result);
@@ -442,51 +439,51 @@ public class Calculator extends Application {
         return text;
     }
 
-    // Apply the specified operation.
-    private void operate(String operation) {
-        if (!this.operandCurrent.isEmpty()) {
+    // Store the specified operation or perform an intermediate calculation with it.
+    private void operate(String operator) {
+        if (!operandCurrent.isEmpty()) {
             // Store the entered operand.
-            if (this.operandStored.isEmpty()) {
-                this.operandStored = new String(this.operandCurrent);
+            if (operandStored.isEmpty()) {
+                operandStored = new String(operandCurrent);
             }
             // Calculate the specified operation on the existing operands and store the result as the stored operand.
             else {
-                this.operandStored = calculate();
+                operandStored = calculate();
             }
         }
-        this.operandCurrent = this.DEFAULT_OPERAND_CURRENT;
-        this.operation = operation;
+        operandCurrent = DEFAULT_OPERAND_CURRENT;
+        operation = operator;
     }
 
     // Solve the stored operation and operands and clear the stored operation.
     private void solve() {
         // Store the current operand and operation for repeated calculations.
-        if (!this.operandCurrent.equals(this.DEFAULT_OPERAND_CURRENT)) {
-            this.operandRepeated = this.operandCurrent;
+        if (!operandCurrent.equals(DEFAULT_OPERAND_CURRENT)) {
+            operandRepeated = operandCurrent;
         }
-        if (!this.operation.equals(this.DEFAULT_OPERATION)) {
-            if (!this.operandCurrent.equals(this.DEFAULT_OPERAND_CURRENT)) {
-                this.operationRepeated = this.operation;
+        if (!operation.equals(DEFAULT_OPERATION)) {
+            if (!operandCurrent.equals(DEFAULT_OPERAND_CURRENT)) {
+                operationRepeated = operation;
             }
             // Revert to the previously entered operation if a new operation was entered but no operand was entered.
             else {
-                this.operation = this.operationRepeated;
+                operation = operationRepeated;
             }
         }
 
-        if (!this.operandStored.isEmpty() && (!this.operandCurrent.isEmpty() || !this.operandRepeated.isEmpty())) {
-            this.operandStored = calculate();
-            this.operandCurrent = this.DEFAULT_OPERAND_CURRENT;
-            this.operation = this.DEFAULT_OPERATION;
+        if (!operandStored.isEmpty() && (!operandCurrent.isEmpty() || !operandRepeated.isEmpty())) {
+            operandStored = calculate();
+            operandCurrent = DEFAULT_OPERAND_CURRENT;
+            operation = DEFAULT_OPERATION;
         }
     }
 
     // Reset the display and any stored operands.
     private void clear() {
-        this.operandCurrent = this.DEFAULT_OPERAND_CURRENT;
-        this.operandStored = this.DEFAULT_OPERAND_STORED;
-        this.operandRepeated = this.DEFAULT_OPERAND_REPEATED;
-        this.operation = this.DEFAULT_OPERATION;
-        this.operationRepeated = this.DEFAULT_OPERATION;
+        operandCurrent = DEFAULT_OPERAND_CURRENT;
+        operandStored = DEFAULT_OPERAND_STORED;
+        operandRepeated = DEFAULT_OPERAND_REPEATED;
+        operation = DEFAULT_OPERATION;
+        operationRepeated = DEFAULT_OPERATION;
     }
 }
