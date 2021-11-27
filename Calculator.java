@@ -3,7 +3,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 import javafx.application.Application;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.geometry.Insets;
@@ -12,6 +11,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -21,6 +21,8 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
 public class Calculator extends Application {
+    static final String PROGRAM_NAME = "Calculator";
+
     // Default text displayed at the top.
     static final String DEFAULT_DISPLAY_TEXT = "0";
     // Default text for the stored operand.
@@ -104,8 +106,8 @@ public class Calculator extends Application {
         root.getChildren().add(display);
 
         // Create digit buttons.
-        Button[] buttons = new Button[10];
-        for (int i = 0; i < buttons.length; i++) {
+        Button[] buttonsDigit = new Button[10];
+        for (int i = 0; i < buttonsDigit.length; i++) {
             String nameButton = String.valueOf(i);
             Button button = new Button(nameButton);
             button.setOnAction(event -> {
@@ -114,7 +116,7 @@ public class Calculator extends Application {
             });
             button.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
             button.setFocusTraversable(false);
-            buttons[i] = button;
+            buttonsDigit[i] = button;
             if (i == 0) {
                 GridPane.setConstraints(button, 1, NUMBER_ROWS-1);
             } else {
@@ -164,21 +166,23 @@ public class Calculator extends Application {
         OPERATOR_SYMBOLS.put(MULTIPLY_SYMBOL, MULTIPLY_SYMBOL_DISPLAY);
         OPERATOR_SYMBOLS.put(DIVIDE_SYMBOL, DIVIDE_SYMBOL_DISPLAY);
         OPERATOR_SYMBOLS.put(POWER_SYMBOL, POWER_SYMBOL_DISPLAY);
+        Button[] buttonsOperator = new Button[OPERATOR_SYMBOLS.size()];
         for (int i = 0; i < OPERATOR_SYMBOLS.size(); i++) {
             String operator = (String)(OPERATOR_SYMBOLS.keySet().toArray()[i]);
             String name = OPERATOR_SYMBOLS.get(operator);
-            Button buttonOperator = new Button(name);
-            buttonOperator.setOnAction(event -> {
+            Button button = new Button(name);
+            button.setOnAction(event -> {
                 operate(operator);
                 display.setText(getDisplayText());
             });
-            buttonOperator.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
-            buttonOperator.setFocusTraversable(false);
-            buttonOperator.setFont(Font.font("", FontWeight.NORMAL, FONT_SIZE_OPERATORS));
+            button.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+            button.setFocusTraversable(false);
+            button.setFont(Font.font("", FontWeight.NORMAL, FONT_SIZE_OPERATORS));
+            buttonsOperator[i] = button;
             int row = (NUMBER_ROWS - 2) - i;
             int column = 3;
-            GridPane.setConstraints(buttonOperator, Math.min(column - (1-row), column), Math.max(1, row));
-            root.getChildren().add(buttonOperator);
+            GridPane.setConstraints(button, Math.min(column - (1-row), column), Math.max(1, row));
+            root.getChildren().add(button);
         }
 
         // Create backspace button.
@@ -214,59 +218,60 @@ public class Calculator extends Application {
         Scene scene = new Scene(root);
 
         // Define key-button mappings.
-//        HashMap<KeyCode, Button> buttonMapping = new HashMap<KeyCode, Button>();
-//        buttonMapping.put(KeyCode.ENTER, buttonSolve);
-//        buttonMapping.put(KeyCode.ESCAPE, buttonClear);
-//        buttonMapping.put(KeyCode.DIGIT0, buttonsDigit[0]);
-//        buttonMapping.put(KeyCode.DIGIT1, buttonsDigit[1]);
-//        buttonMapping.put(KeyCode.DIGIT2, buttonsDigit[2]);
-//        buttonMapping.put(KeyCode.DIGIT3, buttonsDigit[3]);
-//        buttonMapping.put(KeyCode.DIGIT4, buttonsDigit[4]);
-//        buttonMapping.put(KeyCode.DIGIT5, buttonsDigit[5]);
-//        buttonMapping.put(KeyCode.DIGIT6, buttonsDigit[6]);
-//        buttonMapping.put(KeyCode.DIGIT7, buttonsDigit[7]);
-//        buttonMapping.put(KeyCode.DIGIT8, buttonsDigit[8]);
-//        buttonMapping.put(KeyCode.DIGIT9, buttonsDigit[9]);
-//        buttonMapping.put(KeyCode.PLUS, buttonsOperator[0]);
-//        buttonMapping.put(KeyCode.MINUS, buttonsOperator[1]);
-//        buttonMapping.put(KeyCode.ASTERISK, buttonsOperator[2]);
-//        buttonMapping.put(KeyCode.SLASH, buttonsOperator[3]);
+        HashMap<KeyCode, Button> buttonMapping = new HashMap<KeyCode, Button>();
+        buttonMapping.put(KeyCode.ENTER, buttonSolve);
+        buttonMapping.put(KeyCode.ESCAPE, buttonClear);
+        buttonMapping.put(KeyCode.BACK_SPACE, buttonBackspace);
+        buttonMapping.put(KeyCode.DIGIT0, buttonsDigit[0]);
+        buttonMapping.put(KeyCode.DIGIT1, buttonsDigit[1]);
+        buttonMapping.put(KeyCode.DIGIT2, buttonsDigit[2]);
+        buttonMapping.put(KeyCode.DIGIT3, buttonsDigit[3]);
+        buttonMapping.put(KeyCode.DIGIT4, buttonsDigit[4]);
+        buttonMapping.put(KeyCode.DIGIT5, buttonsDigit[5]);
+        buttonMapping.put(KeyCode.DIGIT6, buttonsDigit[6]);
+        buttonMapping.put(KeyCode.DIGIT7, buttonsDigit[7]);
+        buttonMapping.put(KeyCode.DIGIT8, buttonsDigit[8]);
+        buttonMapping.put(KeyCode.DIGIT9, buttonsDigit[9]);
+        buttonMapping.put(KeyCode.NUMPAD0, buttonsDigit[0]);
+        buttonMapping.put(KeyCode.NUMPAD1, buttonsDigit[1]);
+        buttonMapping.put(KeyCode.NUMPAD2, buttonsDigit[2]);
+        buttonMapping.put(KeyCode.NUMPAD3, buttonsDigit[3]);
+        buttonMapping.put(KeyCode.NUMPAD4, buttonsDigit[4]);
+        buttonMapping.put(KeyCode.NUMPAD5, buttonsDigit[5]);
+        buttonMapping.put(KeyCode.NUMPAD6, buttonsDigit[6]);
+        buttonMapping.put(KeyCode.NUMPAD7, buttonsDigit[7]);
+        buttonMapping.put(KeyCode.NUMPAD8, buttonsDigit[8]);
+        buttonMapping.put(KeyCode.NUMPAD9, buttonsDigit[9]);
+        buttonMapping.put(KeyCode.PLUS, buttonsOperator[0]);
+        buttonMapping.put(KeyCode.ADD, buttonsOperator[0]);
+        buttonMapping.put(KeyCode.MINUS, buttonsOperator[1]);
+        buttonMapping.put(KeyCode.SUBTRACT, buttonsOperator[1]);
+        buttonMapping.put(KeyCode.ASTERISK, buttonsOperator[2]);
+        buttonMapping.put(KeyCode.MULTIPLY, buttonsOperator[2]);
+        buttonMapping.put(KeyCode.SLASH, buttonsOperator[3]);
+        buttonMapping.put(KeyCode.DIVIDE, buttonsOperator[3]);
+        buttonMapping.put(KeyCode.PERIOD, buttonDecimal);
+        buttonMapping.put(KeyCode.DECIMAL, buttonDecimal);
 //        buttonMapping.put(KeyCode.CIRCUMFLEX, buttonsOperator[4]);
 
         // Define key event handlers.
-        scene.setOnKeyTyped(event -> {
-            String text = event.getCharacter();
-            switch (text) {
-                case PLUS_SYMBOL:
-                case MINUS_SYMBOL:
-                case MULTIPLY_SYMBOL:
-                case DIVIDE_SYMBOL:
-                case POWER_SYMBOL:
-                    operate(text);
-                    break;
-                default:
-                    enter(text);
-                    break;
+        scene.setOnKeyPressed(event -> {
+            KeyCode code = event.getCode();
+            if (buttonMapping.containsKey(code)) {
+                buttonMapping.get(code).arm();
             }
-            display.setText(getDisplayText());
         });
         scene.setOnKeyReleased(event -> {
-            switch (event.getCode()) {
-                case ENTER:
-                    buttonSolve.fire();
-                    break;
-                case ESCAPE:
-                    buttonClear.fire();
-                    break;
-                case BACK_SPACE:
-                    buttonBackspace.fire();
-                    break;
+            KeyCode code = event.getCode();
+            if (buttonMapping.containsKey(code)) {
+                buttonMapping.get(code).fire();
+                buttonMapping.get(code).disarm();
             }
         });
 
         // Create window.
         stage.setScene(scene);
-        stage.setTitle("Calculator");
+        stage.setTitle(PROGRAM_NAME);
         stage.show();
     }
 
