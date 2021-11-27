@@ -219,10 +219,8 @@ public class Calculator extends Application {
         root.getChildren().add(buttonInvert);
 
         // Create scene.
-        Scene scene = new Scene(root);
-
-        // Define key-button mappings.
-        HashMap<KeyCode, Button> buttonMapping = new HashMap<KeyCode, Button>();
+        Scene scene = new Scene(root);// Define key-button mappings. Each value is either a Button or a 2-length array of Buttons, where the first Button is the default and the second Button is the button to use if Shift is used with the key.
+        HashMap<KeyCode, Object> buttonMapping = new HashMap<KeyCode, Object>();
         buttonMapping.put(KeyCode.ENTER, buttonSolve);
         buttonMapping.put(KeyCode.ESCAPE, buttonClear);
         buttonMapping.put(KeyCode.BACK_SPACE, buttonBackspace);
@@ -232,9 +230,9 @@ public class Calculator extends Application {
         buttonMapping.put(KeyCode.DIGIT3, buttonsDigit[3]);
         buttonMapping.put(KeyCode.DIGIT4, buttonsDigit[4]);
         buttonMapping.put(KeyCode.DIGIT5, buttonsDigit[5]);
-        buttonMapping.put(KeyCode.DIGIT6, buttonsDigit[6]);
+        buttonMapping.put(KeyCode.DIGIT6, new Button[]{buttonsDigit[6], buttonsOperator[4]});
         buttonMapping.put(KeyCode.DIGIT7, buttonsDigit[7]);
-        buttonMapping.put(KeyCode.DIGIT8, buttonsDigit[8]);
+        buttonMapping.put(KeyCode.DIGIT8, new Button[]{buttonsDigit[8], buttonsOperator[2]});
         buttonMapping.put(KeyCode.DIGIT9, buttonsDigit[9]);
         buttonMapping.put(KeyCode.NUMPAD0, buttonsDigit[0]);
         buttonMapping.put(KeyCode.NUMPAD1, buttonsDigit[1]);
@@ -246,32 +244,46 @@ public class Calculator extends Application {
         buttonMapping.put(KeyCode.NUMPAD7, buttonsDigit[7]);
         buttonMapping.put(KeyCode.NUMPAD8, buttonsDigit[8]);
         buttonMapping.put(KeyCode.NUMPAD9, buttonsDigit[9]);
-        buttonMapping.put(KeyCode.PLUS, buttonsOperator[0]);
+        buttonMapping.put(KeyCode.EQUALS, new Button[]{buttonSolve, buttonsOperator[0]});
         buttonMapping.put(KeyCode.ADD, buttonsOperator[0]);
         buttonMapping.put(KeyCode.MINUS, buttonsOperator[1]);
         buttonMapping.put(KeyCode.SUBTRACT, buttonsOperator[1]);
-        buttonMapping.put(KeyCode.ASTERISK, buttonsOperator[2]);
         buttonMapping.put(KeyCode.MULTIPLY, buttonsOperator[2]);
-        buttonMapping.put(KeyCode.SLASH, buttonsOperator[3]);
+        buttonMapping.put(KeyCode.SLASH, new Button[]{buttonsOperator[3], buttonRandom});
         buttonMapping.put(KeyCode.DIVIDE, buttonsOperator[3]);
         buttonMapping.put(KeyCode.PERIOD, buttonDecimal);
         buttonMapping.put(KeyCode.DECIMAL, buttonDecimal);
-//        buttonMapping.put(KeyCode.CIRCUMFLEX, buttonsOperator[4]);
 
-        // Define key event handlers.
-        scene.setOnKeyPressed(event -> {
-            KeyCode code = event.getCode();
-            if (buttonMapping.containsKey(code)) {
-                buttonMapping.get(code).arm();
+        // Create event handler for key events.
+        EventHandler<KeyEvent> handlerKey = new EventHandler<KeyEvent>() {
+            public void handle(KeyEvent event) {
+                KeyCode code = event.getCode();
+                if (buttonMapping.containsKey(code)) {
+                    // Get the button to use.
+                    Object value = buttonMapping.get(code);
+                    Button button;
+                    if (value.getClass().isArray()){
+                        button = event.isShiftDown() ? ((Button[])value)[1] : ((Button[])value)[0];
+                    }
+                    else {
+                        button = (Button)value;
+                    }
+                    // Highlight the button.
+                    if (event.getEventType() == KeyEvent.KEY_PRESSED) {
+                        button.arm();
+                    }
+                    // Perform the action and un-highlight the button.
+                    else if (event.getEventType() == KeyEvent.KEY_RELEASED) {
+                        button.fire();
+                        button.disarm();
+                    }
+                }
             }
-        });
-        scene.setOnKeyReleased(event -> {
-            KeyCode code = event.getCode();
-            if (buttonMapping.containsKey(code)) {
-                buttonMapping.get(code).fire();
-                buttonMapping.get(code).disarm();
-            }
-        });
+        };
+
+        // Set handler to key events..
+        scene.setOnKeyPressed(handlerKey);
+        scene.setOnKeyReleased(handlerKey);
 
         // Create window.
         stage.setScene(scene);
